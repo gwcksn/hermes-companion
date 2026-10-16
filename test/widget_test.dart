@@ -50,6 +50,7 @@ class _Harness {
   final server = FakeHermes();
   final gateway = FakeGateway();
   final notifications = FakeNotificationsBridge();
+  final recorder = FakeRecorder();
   late SharedPreferences prefs;
 
   Future<void> pump(WidgetTester tester) async {
@@ -70,7 +71,7 @@ class _Harness {
           weatherClientProvider.overrideWithValue(_FixtureWeather()),
           gatewayConnectorProvider.overrideWithValue(gateway.connect),
           notificationsBridgeProvider.overrideWithValue(notifications),
-          recorderFactoryProvider.overrideWithValue(FakeRecorder.new),
+          recorderFactoryProvider.overrideWithValue(() => recorder),
         ],
         child: const HermesApp(),
       ),
@@ -138,7 +139,7 @@ void main() {
     expect(h.prefs.getBool('settings.setupComplete'), isTrue);
   });
 
-  testWidgets('configured app opens home; pages, listening and settings render', (tester) async {
+  testWidgets('configured app opens home; pages, mic and settings render', (tester) async {
     final h = _Harness(
       initialPrefs: {'settings.serverUrl': _url, 'settings.profile': 'default', 'settings.setupComplete': true},
     );
@@ -160,12 +161,17 @@ void main() {
     await tester.pumpAndSettle();
     await tester.drag(find.byType(PageView), const Offset(400, 0));
     await tester.pumpAndSettle();
+    // A tap starts recording in the composer, not on a separate screen. It ticks a timer, so it
+    // never settles: step frames by hand.
     await tester.tap(find.bySemanticsLabel('Talk to Hermes'));
-    // Listening ticks a timer, so it never settles: step frames by hand.
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
-    expect(find.text('Tap the square to send'), findsOneWidget);
-    await tester.tap(find.text('Cancel'));
+    expect(h.recorder.started, isTrue);
+    expect(find.text('Tap to send'), findsOneWidget);
+    await tester.tap(find.bySemanticsLabel('Cancel recording'));
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(h.recorder.cancelled, isTrue);
+    expect(find.text('Tap to send'), findsNothing);
     await tester.pumpAndSettle();
 
     await tester.tap(find.bySemanticsLabel('Connection settings'));
@@ -255,5 +261,100 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('working on it'), findsNothing);
     expect(find.text('Hello.'), findsOneWidget);
+  });
+
+  group('mic: hold to talk, tap to latch', () {
+    Future<_Harness> chat(WidgetTester tester) async {
+      final h = _Harness(initialPrefs: {'settings.serverUrl': _url, 'settings.setupComplete': true});
+      await h.store.save(const Credentials(server: _url, username: 'admin', password: 'secret'));
+      await h.pump(tester);
+      return h;
+    }
+
+    Future<void> speak(WidgetTester tester, Duration length) async {
+      // The recorder clock is a real-time-free periodic timer, so pumped time counts.
+      await tester.pump(length);
+    }
+
+    Future<void> settleReal(WidgetTester tester) async {
+      // transcribe runs through Dio on real async: give it event-loop turns, not fake time.
+      await tester.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 300)));
+      await tester.pump();
+    }
+
+    testWidgets('hold, release: transcribes and sends the message', (tester) async {
+      final h = await chat(tester);
+      final mic = find.bySemanticsLabel('Talk to Hermes');
+      final g = await tester.startGesture(tester.getCenter(mic));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(h.recorder.started, isTrue);
+      expect(find.text('‹ Slide to cancel'), findsOneWidget);
+      await speak(tester, const Duration(milliseconds: 1500));
+      await g.up();
+      await tester.pump();
+      await settleReal(tester);
+      await tester.pumpAndSettle();
+      expect(h.server.transcribeBodies, hasLength(1));
+      expect(find.text('what is on my calendar'), findsOneWidget);
+      expect((h.gateway.last.request('prompt.submit')['params'] as Map)['text'], 'what is on my calendar');
+      expect(find.text('Transcribing…'), findsNothing, reason: 'the composer returns to normal after sending');
+      expect(find.byType(TextField), findsOneWidget);
+    });
+
+    testWidgets('quick tap latches; stop sends', (tester) async {
+      final h = await chat(tester);
+      await tester.tap(find.bySemanticsLabel('Talk to Hermes'));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('Tap to send'), findsOneWidget);
+      expect(h.server.transcribeBodies, isEmpty);
+      await speak(tester, const Duration(milliseconds: 1500));
+      await tester.tap(find.bySemanticsLabel('Stop and send'));
+      await tester.pump();
+      await settleReal(tester);
+      await tester.pumpAndSettle();
+      expect(h.server.transcribeBodies, hasLength(1));
+      expect(find.text('what is on my calendar'), findsOneWidget);
+      expect(find.byType(TextField), findsOneWidget);
+
+      // ...and the mic works again straight away.
+      await tester.tap(find.bySemanticsLabel('Talk to Hermes'));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('Tap to send'), findsOneWidget);
+      await tester.tap(find.bySemanticsLabel('Cancel recording'));
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('slide away and release cancels without sending', (tester) async {
+      final h = await chat(tester);
+      final mic = find.bySemanticsLabel('Talk to Hermes');
+      final g = await tester.startGesture(tester.getCenter(mic));
+      await tester.pump(const Duration(milliseconds: 500));
+      await g.moveBy(const Offset(-400, 0));
+      await tester.pump();
+      expect(find.text('Release to cancel'), findsOneWidget);
+      await g.up();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(h.recorder.cancelled, isTrue);
+      expect(h.server.transcribeBodies, isEmpty);
+      expect(find.text('Release to cancel'), findsNothing);
+      await tester.pumpAndSettle();
+      expect(find.text('Say something to Hermes'), findsOneWidget);
+      expect(find.text('Yogyakarta · WIB'), findsNothing, reason: 'the slide must not swipe the pager');
+    });
+
+    testWidgets('a blocked microphone shows its message, then clears', (tester) async {
+      final h = await chat(tester);
+      h.recorder.permission = false;
+      final g = await tester.startGesture(tester.getCenter(find.bySemanticsLabel('Talk to Hermes')));
+      await tester.pump(const Duration(milliseconds: 100));
+      await g.up();
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.textContaining('Microphone is blocked'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 4));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Microphone is blocked'), findsNothing);
+      expect(find.byType(TextField), findsOneWidget);
+    });
   });
 }

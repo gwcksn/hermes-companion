@@ -6,8 +6,7 @@ import '../theme/tokens.dart';
 import '../widgets/bubbles.dart';
 import '../widgets/common.dart';
 import '../widgets/icons.dart';
-import 'home_shell.dart';
-import 'listening_screen.dart';
+import '../widgets/mic_composer.dart';
 
 /// Chat page: the ongoing companion conversation for the selected profile.
 class ChatPage extends ConsumerStatefulWidget {
@@ -106,46 +105,39 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               _ClarifyCard(chat.clarify!.current!, onPick: ctl.answerClarify, onSkip: ctl.skipClarify),
             ],
             SizedBox(height: tight ? 0 : 10),
-            SizedBox(
-              height: 48,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: SizedBox(
-                      height: 48,
-                      child: TextField(
-                        controller: _input,
-                        style: hText(15, weight: FontWeight.w600),
-                        cursorColor: HColors.mint,
-                        textAlignVertical: TextAlignVertical.center,
-                        textInputAction: TextInputAction.send,
-                        onSubmitted: (_) => _submit(),
-                        decoration: InputDecoration(
-                          hintText: chat.clarify != null ? 'Type your answer' : 'Message Hermes',
-                          isDense: true,
-                          filled: true,
-                          fillColor: HColors.surface,
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: const BorderSide(color: Colors.transparent, width: 2),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: const BorderSide(color: Colors.transparent, width: 2),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(24),
-                            borderSide: const BorderSide(color: HColors.mint, width: 2),
-                          ),
-                        ),
-                      ),
+            MicComposer(
+              field: SizedBox(
+                height: 48,
+                child: TextField(
+                  controller: _input,
+                  style: hText(15, weight: FontWeight.w600),
+                  cursorColor: HColors.mint,
+                  textAlignVertical: TextAlignVertical.center,
+                  textInputAction: TextInputAction.send,
+                  onSubmitted: (_) => _submit(),
+                  decoration: InputDecoration(
+                    hintText: chat.clarify != null ? 'Type your answer' : 'Message Hermes',
+                    isDense: true,
+                    filled: true,
+                    fillColor: HColors.surface,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: const BorderSide(color: Colors.transparent, width: 2),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: const BorderSide(color: Colors.transparent, width: 2),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(24),
+                      borderSide: const BorderSide(color: HColors.mint, width: 2),
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  if (canStop)
-                    RoundIconButton(
+                ),
+              ),
+              trailing: canStop
+                  ? RoundIconButton(
                       icon: HIcon.stop,
                       iconColor: HColors.coral,
                       background: HColors.surface,
@@ -153,24 +145,13 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                       iconSize: 18,
                       onPressed: ctl.stop,
                     )
-                  else
-                    RoundIconButton(
+                  : RoundIconButton(
                       icon: HIcon.arrowRight,
                       iconColor: HColors.peach,
                       background: HColors.surface,
                       semanticLabel: 'Send message',
                       onPressed: _submit,
                     ),
-                  const SizedBox(width: 8),
-                  RoundIconButton(
-                    icon: HIcon.mic,
-                    iconColor: HColors.onMint,
-                    background: HColors.mint,
-                    semanticLabel: 'Talk to Hermes',
-                    onPressed: () => Navigator.of(context).push(fadeRoute(const ListeningScreen())),
-                  ),
-                ],
-              ),
             ),
           ],
         );

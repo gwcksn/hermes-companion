@@ -10,6 +10,7 @@ class AppSettings {
     this.profile = 'default',
     this.keepScreenOn = true,
     this.dimAtNight = true,
+    this.readAloud = false,
     this.setupComplete = false,
   });
 
@@ -17,6 +18,7 @@ class AppSettings {
   final String profile;
   final bool keepScreenOn;
   final bool dimAtNight;
+  final bool readAloud;
   final bool setupComplete;
 
   AppSettings copyWith({
@@ -24,12 +26,14 @@ class AppSettings {
     String? profile,
     bool? keepScreenOn,
     bool? dimAtNight,
+    bool? readAloud,
     bool? setupComplete,
   }) => AppSettings(
     serverUrl: serverUrl ?? this.serverUrl,
     profile: profile ?? this.profile,
     keepScreenOn: keepScreenOn ?? this.keepScreenOn,
     dimAtNight: dimAtNight ?? this.dimAtNight,
+    readAloud: readAloud ?? this.readAloud,
     setupComplete: setupComplete ?? this.setupComplete,
   );
 }
@@ -40,6 +44,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
   static const _profile = 'settings.profile';
   static const _keepOn = 'settings.keepScreenOn';
   static const _dim = 'settings.dimAtNight';
+  static const _readAloud = 'settings.readAloud';
   static const _done = 'settings.setupComplete';
 
   SharedPreferences get _prefs => ref.read(sharedPrefsProvider);
@@ -52,6 +57,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
       profile: p.getString(_profile) ?? 'default',
       keepScreenOn: p.getBool(_keepOn) ?? true,
       dimAtNight: p.getBool(_dim) ?? true,
+      readAloud: p.getBool(_readAloud) ?? false,
       setupComplete: p.getBool(_done) ?? false,
     );
   }
@@ -64,6 +70,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
       p.setString(_profile, next.profile),
       p.setBool(_keepOn, next.keepScreenOn),
       p.setBool(_dim, next.dimAtNight),
+      p.setBool(_readAloud, next.readAloud),
       p.setBool(_done, next.setupComplete),
     ]);
   }

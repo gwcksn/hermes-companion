@@ -133,8 +133,8 @@ Checked against the code by reading it. `flutter analyze` and `flutter test` pri
 - [x] Extras beyond the brief: markdown tables in replies, phone notifications panel, Google Calendar and Tasks panel (OAuth), launcher icon and splash, inline thinking status
 
 ### TODO
-- [x] **Voice input.** Mic records AAC/m4a (`lib/data/voice/`), Stop sends it to `POST /api/audio/transcribe` and the transcript goes to chat. First call ~40 s while the server loads its model, then ~8 s
-- [ ] **Voice output.** Nothing calls `POST /api/audio/speak`. Read replies aloud and tie the speaking avatar to playback
+- [x] **Voice input.** WhatsApp-style mic in the chat composer (`lib/widgets/mic_composer.dart`, no separate screen). Hold to talk and release to send, slide left or up to cancel; or tap to record hands-free, then tap stop to send. Records AAC/m4a (`lib/data/voice/`), sends to `POST /api/audio/transcribe`, and the transcript goes to chat. First call ~40 s while the server loads its model, then ~8 s
+- [x] **Voice output.** With *Read replies aloud* on (Settings), each finished reply is spoken through `POST /api/audio/speak` (`lib/data/voice/speak.dart`, `reply_speaker.dart`), played with `audioplayers`, and the speaking avatar follows the audio. A hands-free voice mode (auto-send on silence, auto-listen after the reply) was built and removed: on a Bluetooth speaker the player's end-of-clip signal arrives before the sound is audible, so the mic reopened over the reply
 - [x] **Dim at night.** `AmbientOverlay` dims 55% from 22:00 to 06:00 WIB when the setting is on (`lib/layout/ambient.dart`)
 - [x] **Burn-in pixel shift.** `AmbientController` moves `ScaledStage.offset` up to 2 px every 3 min
 - [x] **Sleeping state.** After 10 min idle (no touch, no chat activity, avatar idle) the avatar sleeps and the screen dims to 75%; touch or chat wakes it

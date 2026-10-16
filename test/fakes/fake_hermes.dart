@@ -51,6 +51,10 @@ class FakeHermes implements HttpClientAdapter {
   String transcript = 'what is on my calendar';
   final transcribeBodies = <Map>[];
 
+  /// /api/audio/speak answers a base64 data URL; `speakBodies` collects the requests.
+  final speakBodies = <Map>[];
+  bool speakFails = false;
+
   static const status = {
     'version': '0.21.6',
     'gateway_running': true,
@@ -91,6 +95,11 @@ class FakeHermes implements HttpClientAdapter {
         if (o.headers['cookie'] != 'hermes_session=$sessionValue') return _json(401, {'detail': 'Not authenticated'});
         transcribeBodies.add(o.data as Map);
         return _json(200, {'ok': true, 'transcript': transcript, 'provider': 'local'});
+      case ('POST', '/api/audio/speak'):
+        if (o.headers['cookie'] != 'hermes_session=$sessionValue') return _json(401, {'detail': 'Not authenticated'});
+        speakBodies.add(o.data as Map);
+        if (speakFails) return _json(500, {'detail': 'tts down'});
+        return _json(200, {'ok': true, 'audio': 'data:audio/mpeg;base64,AQID'});
     }
     return _json(404, {'detail': 'Not Found'});
   }
