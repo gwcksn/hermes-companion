@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 
 import '../theme/tokens.dart';
 
-/// Lays [child] out on the fixed 740x360 design canvas and scales it to fit
-/// the real screen, so measurements from design/*.dc.html apply verbatim.
+/// Lays [child] out on the fixed design canvas (740x360 landscape, 360x740 portrait) and scales
+/// it to fit the real screen, so measurements from design/*.dc.html apply verbatim.
 class ScaledStage extends StatelessWidget {
-  const ScaledStage({super.key, required this.child, this.offset = Offset.zero});
+  const ScaledStage({super.key, required this.child, required this.size, this.offset = Offset.zero});
 
   final Widget child;
+  final Size size;
 
   /// Small translation used for AMOLED burn-in pixel shift.
   final Offset offset;
@@ -21,7 +22,7 @@ class ScaledStage extends StatelessWidget {
         child: FittedBox(
           child: Transform.translate(
             offset: offset,
-            child: SizedBox.fromSize(size: HSizes.designSize, child: child),
+            child: SizedBox.fromSize(size: size, child: child),
           ),
         ),
       ),

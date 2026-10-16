@@ -53,7 +53,13 @@ abstract final class HRadii {
 
 abstract final class HSizes {
   static const designSize = Size(740, 360);
+
+  /// Portrait canvas: the landscape one turned on its side (avatar stage on top, panel below).
+  static const portraitSize = Size(360, 740);
   static const stage = 268.0;
+
+  /// Canvas for a screen of the given pixel size.
+  static Size designFor(Size screen) => screen.height > screen.width ? portraitSize : designSize;
   static const panelMargin = 12.0;
   static const minTouch = 44.0;
   static const inputHeight = 44.0;

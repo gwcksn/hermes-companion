@@ -9,6 +9,7 @@ import '../theme/tokens.dart';
 import 'common.dart';
 
 /// Every screen: 268dp avatar stage on the left, rounded panel on the right.
+/// In portrait the stage is on top and the panel below.
 class ScreenFrame extends StatelessWidget {
   const ScreenFrame({
     super.key,
@@ -39,30 +40,30 @@ class ScreenFrame extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final portrait = MediaQuery.sizeOf(context).height > MediaQuery.sizeOf(context).width;
+    final stage = AvatarStage(
+      state: state,
+      caption: caption,
+      captionColor: captionColor,
+      glow: glow,
+      action: stageAction,
+      onAvatarTap: onAvatarTap,
+      portrait: portrait,
+    );
+    final panelBox = Container(
+      margin: portrait
+          ? const EdgeInsets.fromLTRB(HSizes.panelMargin, 0, HSizes.panelMargin, HSizes.panelMargin)
+          : const EdgeInsets.fromLTRB(0, HSizes.panelMargin, HSizes.panelMargin, HSizes.panelMargin),
+      padding: panelPadding,
+      decoration: BoxDecoration(color: HColors.panel, borderRadius: BorderRadius.circular(HRadii.panel)),
+      child: panel,
+    );
     return Scaffold(
       backgroundColor: HColors.bg,
-      body: Row(
-        // Stretch so the stage glow fills the full 360dp height.
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          AvatarStage(
-            state: state,
-            caption: caption,
-            captionColor: captionColor,
-            glow: glow,
-            action: stageAction,
-            onAvatarTap: onAvatarTap,
-          ),
-          Expanded(
-            child: Container(
-              margin: const EdgeInsets.fromLTRB(0, HSizes.panelMargin, HSizes.panelMargin, HSizes.panelMargin),
-              padding: panelPadding,
-              decoration: BoxDecoration(color: HColors.panel, borderRadius: BorderRadius.circular(HRadii.panel)),
-              child: panel,
-            ),
-          ),
-        ],
-      ),
+      // Stretch so the stage glow fills the full height (landscape) or width (portrait).
+      body: portrait
+          ? Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [stage, Expanded(child: panelBox)])
+          : Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [stage, Expanded(child: panelBox)]),
     );
   }
 }
@@ -76,9 +77,11 @@ class AvatarStage extends StatelessWidget {
     this.glow,
     this.action,
     this.onAvatarTap,
+    this.portrait = false,
   });
 
   final AvatarState state;
+  final bool portrait;
   final String? caption;
   final Color? captionColor;
   final Color? glow;
@@ -88,7 +91,8 @@ class AvatarStage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: HSizes.stage,
+      width: portrait ? null : HSizes.stage,
+      height: portrait ? HSizes.stage : null,
       // CSS: radial-gradient(circle at 50% 52%, glow 0%, bg 72%) on a 268x360 box.
       // 72% of the farthest-corner distance (230dp) = 166dp = 0.618 of the 268dp short side.
       decoration: BoxDecoration(
