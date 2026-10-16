@@ -206,12 +206,7 @@ class ChatController extends Notifier<ChatState> {
         result = null; // deleted or unknown: start fresh
       }
     }
-    result ??= await socket.rpc('session.create', {
-      ...profileQuery(_profile),
-      'cols': 96,
-      'source': 'desktop',
-      'title': 'Companion',
-    }) as Map?;
+    result ??= await _createSession(socket);
     if (result == null) throw const RpcError(-3, 'no session');
     _sessionId = result['session_id'] as String?;
     final stored = result['stored_session_id'] as String?;
@@ -235,6 +230,62 @@ class ChatController extends Notifier<ChatState> {
     state = state.copyWith(messages: kept);
   }
 
+  Future<Map?> _createSession(GatewaySocket socket, {String? title}) async {
+    return await socket.rpc('session.create', {
+          ...profileQuery(_profile),
+          'cols': 96,
+          'source': 'desktop',
+          'title': title ?? 'Companion',
+        })
+        as Map?;
+  }
+
+  /// Start a fresh session (Hermes `/new`): there is no server-side reset RPC,
+  /// so drop the stored id and create a new session. The old one stays in
+  /// Hermes history.
+  Future<void> newSession({String? title}) async {
+    final prefs = ref.read(sharedPrefsProvider);
+    final socket = _socket;
+    final oldId = _sessionId;
+    if (state.busy) await stop();
+    _settle?.cancel();
+    _sessionId = null;
+    _storedId = null;
+    await prefs.remove(_sessionKey);
+    state = state.copyWith(
+      messages: const [],
+      busy: false,
+      activity: () => null,
+      approval: () => null,
+      clarify: () => null,
+    );
+    _avatar(AvatarState.idle);
+    if (socket == null) return; // connect() will create a fresh session
+    if (oldId != null) {
+      await socket.rpc('session.close', {'session_id': oldId}).catchError(
+        (_) => null,
+      );
+    }
+    try {
+      final result = await _createSession(socket, title: title);
+      if (_disposed || socket != _socket || result == null) return;
+      _sessionId = result['session_id'] as String?;
+      final stored = result['stored_session_id'] as String?;
+      if (stored != null && stored.isNotEmpty) {
+        _storedId = stored;
+        await prefs.setString(_sessionKey, stored);
+      }
+    } on RpcError catch (e) {
+      _append(
+        ChatMessage(
+          ChatRole.note,
+          'Could not start a new chat: ${e.message}',
+          error: true,
+        ),
+      );
+    }
+  }
+
   // ── user actions ──────────────────────────────────────────────────────────────
 
   Future<void> send(String text) async {
@@ -244,6 +295,10 @@ class ChatController extends Notifier<ChatState> {
 
     // A pending clarify question takes typed text as its answer.
     if (state.clarify?.current != null) return answerClarify(text);
+
+    final cmd = RegExp(r'^/(new|reset)(?:\s+(.+))?$', caseSensitive: false)
+        .firstMatch(text);
+    if (cmd != null) return newSession(title: cmd.group(2)?.trim());
 
     final socket = _socket;
     _append(ChatMessage(ChatRole.user, text));

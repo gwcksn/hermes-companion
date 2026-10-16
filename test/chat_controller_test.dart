@@ -280,4 +280,26 @@ void main() {
     expect(r.gateway.uris.last.queryParameters['ticket'], 'ticket-2');
     expect(r.gateway.last.request('session.resume')['params']['session_id'], 'stored-1');
   });
+
+  test('/new starts a fresh session without prompting the server', () async {
+    final r = _Rig(prefs);
+    await r.start();
+    addTearDown(r.c.dispose);
+    final conn = r.gateway.last;
+    final firstStored = prefs.getString(
+      'chat.session.$_url|default',
+    );
+
+    await r.ctl.send('hello');
+    expect(r.chat.messages, isNotEmpty);
+    await r.ctl.send('/new');
+    await r.settle();
+
+    expect(r.chat.messages, isEmpty);
+    expect(conn.methods.where((m) => m == 'prompt.submit').length, 1);
+    expect(conn.methods, containsAllInOrder(['session.close', 'session.create']));
+    final fresh = prefs.getString('chat.session.$_url|default');
+    expect(fresh, isNotNull);
+    expect(fresh, isNot(firstStored));
+  });
 }

@@ -58,7 +58,10 @@ class _ChatPageState extends ConsumerState<ChatPage> {
         return Column(
           children: [
             Expanded(
-              child: LayoutBuilder(
+              child: Stack(
+                children: [
+                  Positioned.fill(
+                    child: LayoutBuilder(
                 builder: (context, c) {
                   if (chat.messages.isEmpty) return _EmptyState(chat.phase);
                   final items = chat.messages.reversed.toList();
@@ -80,6 +83,23 @@ class _ChatPageState extends ConsumerState<ChatPage> {
                     },
                   );
                 },
+                    ),
+                  ),
+                  if (chat.messages.isNotEmpty && chat.phase == ChatPhase.ready)
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: RoundIconButton(
+                        icon: HIcon.refresh,
+                        iconColor: HColors.peach,
+                        background: HColors.surface,
+                        semanticLabel: 'New chat',
+                        size: 36,
+                        iconSize: 16,
+                        onPressed: ctl.newSession,
+                      ),
+                    ),
+                ],
               ),
             ),
             if ((chat.activity != null && !inlineStatus) || chat.phase == ChatPhase.offline && chat.messages.isNotEmpty)
