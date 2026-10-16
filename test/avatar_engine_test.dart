@@ -55,7 +55,7 @@ void main() {
     expect(mouth.getBounds().right, closeTo(108, 0.01));
   });
 
-  test('all 12 scenes exist and paint across a full cycle', () {
+  test('all 21 scenes exist and paint across a full cycle', () {
     expect(avatarScenes.keys, containsAll(AvatarState.values));
     for (final scene in avatarScenes.values) {
       for (var t = 0.0; t < 10; t += 0.37) {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -11,15 +12,28 @@ import '../screens/clock_page.dart' show nowWib;
 
 const _shiftEvery = Duration(minutes: 3);
 const _nightCheckEvery = Duration(minutes: 1);
-const singAfter = Duration(minutes: 3);
+const activityStartAfter = Duration(minutes: 3);
+const activityEvery = Duration(minutes: 1);
 const sleepAfter = Duration(minutes: 10);
 const happyFor = Duration(seconds: 3);
 
-/// What Hermes does while nobody is around: (idle time before it starts, avatar). It runs until the
-/// next entry or [sleepAfter]. Add a row here for each new idle activity.
-const idleActivities = [(singAfter, AvatarState.singing)];
+/// What Hermes does while nobody is around. From [activityStartAfter] until [sleepAfter] it plays a
+/// random one (never the same twice in a row), switching every [activityEvery].
+/// At night only calm ones ([AvatarState.nightOk]) are picked. Add an entry here for each new idle activity.
+const idleActivities = [
+  AvatarState.singing,
+  AvatarState.coffee,
+  AvatarState.reading,
+  AvatarState.stargazing,
+  AvatarState.meditating,
+  AvatarState.gaming,
+  AvatarState.doodling,
+  AvatarState.stretching,
+  AvatarState.daydreaming,
+  AvatarState.clockpeek,
+];
 
-final _activityStates = {for (final a in idleActivities) a.$2};
+final _activityStates = {...idleActivities};
 final _idleLike = {AvatarState.idle, ..._activityStates};
 
 const nightDimOpacity = 0.55;
@@ -59,6 +73,8 @@ class AmbientController extends Notifier<AmbientState> {
   var _step = 0;
   final _idleTimers = <Timer>[];
   Timer? _happyTimer;
+  final _rng = Random();
+  AvatarState? _lastActivity;
 
   @override
   AmbientState build() {
@@ -124,14 +140,8 @@ class AmbientController extends Notifier<AmbientState> {
 
   void _armIdle() {
     _cancelIdle();
-    for (final (after, avatar) in idleActivities) {
-      _idleTimers.add(
-        Timer(after, () {
-          // Never cut off thinking, alarms or errors.
-          if (_idleLike.contains(ref.read(avatarProvider))) ref.read(avatarProvider.notifier).set(avatar);
-        }),
-      );
-    }
+    _lastActivity = null;
+    _idleTimers.add(Timer(activityStartAfter, _nextActivity));
     _idleTimers.add(
       Timer(sleepAfter, () {
         if (!_idleLike.contains(ref.read(avatarProvider))) return _armIdle();
@@ -139,6 +149,18 @@ class AmbientController extends Notifier<AmbientState> {
         ref.read(avatarProvider.notifier).set(AvatarState.sleeping);
       }),
     );
+  }
+
+  void _nextActivity() {
+    // Never cut off thinking, alarms or errors.
+    if (!_idleLike.contains(ref.read(avatarProvider))) return;
+    final night = isNightWib(nowWib());
+    final pool = night ? idleActivities.where((a) => a.nightOk).toList() : idleActivities;
+    final options = pool.length > 1 ? pool.where((a) => a != _lastActivity).toList() : pool;
+    final pick = options[_rng.nextInt(options.length)];
+    _lastActivity = pick;
+    ref.read(avatarProvider.notifier).set(pick);
+    _idleTimers.add(Timer(activityEvery, _nextActivity));
   }
 }
 

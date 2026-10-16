@@ -37,6 +37,14 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     super.dispose();
   }
 
+  /// At most 3 page dots, windowed around the current page.
+  Iterable<int> _visibleDots() {
+    final n = _labels.length;
+    if (n <= 3) return List.generate(n, (i) => i);
+    final start = (_page - 1).clamp(0, n - 3);
+    return List.generate(3, (i) => start + i);
+  }
+
   void _goTo(int i) => _pages.animateToPage(i, duration: const Duration(milliseconds: 280), curve: Curves.easeOutCubic);
 
   @override
@@ -76,7 +84,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                       child: StatusLine(link.label, dotColor: link.color),
                     ),
                   ),
-                  for (var i = 0; i < _labels.length; i++)
+                  for (final i in _visibleDots())
                     Semantics(
                       button: true,
                       selected: _page == i,

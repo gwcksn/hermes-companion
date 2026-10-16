@@ -95,7 +95,8 @@ void main() {
     expect(HSizes.stage, 268);
     expect(AvatarState.values.map((s) => s.name), [
       'idle', 'listening', 'thinking', 'working', 'searching', 'speaking', //
-      'done', 'oops', 'sleeping', 'happy', 'alarm', 'singing',
+      'done', 'oops', 'sleeping', 'happy', 'alarm', 'singing', 'coffee', 'reading', 'stargazing', 'meditating', //
+      'gaming', 'doodling', 'stretching', 'daydreaming', 'clockpeek',
     ]);
   });
 
@@ -154,7 +155,10 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('Partly cloudy'), findsOneWidget);
 
-    await tester.tap(find.bySemanticsLabel('Chat page'));
+    // Only 3 dots show, windowed around the current page, so Chat is reached by swiping back.
+    await tester.drag(find.byType(PageView), const Offset(400, 0));
+    await tester.pumpAndSettle();
+    await tester.drag(find.byType(PageView), const Offset(400, 0));
     await tester.pumpAndSettle();
     await tester.tap(find.bySemanticsLabel('Talk to Hermes'));
     // Listening ticks a timer, so it never settles: step frames by hand.

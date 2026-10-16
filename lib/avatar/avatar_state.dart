@@ -2,7 +2,7 @@ import 'package:flutter/painting.dart';
 
 import '../theme/tokens.dart';
 
-/// The 12 avatar states, in tokens.json order. See HANDOFF.md §5 for triggers.
+/// The 21 avatar states: 12 core (tokens.json order) then 9 idle activities. See HANDOFF.md §5 for triggers.
 enum AvatarState {
   idle('Idle'),
   listening('Listening'),
@@ -15,7 +15,16 @@ enum AvatarState {
   sleeping('Sleeping'),
   happy('Happy'),
   alarm('Alarm'),
-  singing('Singing');
+  singing('Singing'),
+  coffee('Coffee'),
+  reading('Reading'),
+  stargazing('Stargazing'),
+  meditating('Meditating'),
+  gaming('Gaming'),
+  doodling('Doodling'),
+  stretching('Stretching'),
+  daydreaming('Daydreaming'),
+  clockpeek('Clock peek');
 
   const AvatarState(this.label);
 
@@ -23,9 +32,9 @@ enum AvatarState {
 
   /// Stage caption color: mint while Hermes is actively engaged, muted otherwise.
   Color get labelColor => switch (this) {
-    idle || sleeping => HColors.muted,
     oops => HColors.coral,
-    _ => HColors.mint,
+    working || searching || thinking || listening || speaking || done || happy || alarm || singing => HColors.mint,
+    _ => HColors.muted,
   };
 
   /// Repaint rate. Each frame costs real GPU-driver time on the S8 (~1.6% of a core per fps),
@@ -33,7 +42,14 @@ enum AvatarState {
   int get fps => switch (this) {
     sleeping => 10,
     idle || thinking || searching || listening || happy || oops => 20,
-    working || speaking || done || alarm || singing => 30,
+    working || speaking || done || alarm || singing || gaming => 30,
+    coffee || reading || stargazing || meditating || doodling || stretching || daydreaming || clockpeek => 20,
+  };
+
+  /// Whether this idle activity is calm enough to play during the night window (HANDOFF.md §5b).
+  bool get nightOk => switch (this) {
+    coffee || reading || stargazing || meditating || daydreaming => true,
+    _ => false,
   };
 
   /// Inner color of the stage's radial glow.
