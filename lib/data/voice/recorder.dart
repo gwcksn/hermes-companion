@@ -46,6 +46,10 @@ class MicRecorder implements Recorder {
   @override
   Future<Uint8List?> stop() async {
     final path = await _rec.stop();
+    // record keeps Bluetooth SCO up after stop() for a next take, which holds a
+    // BT headset in call mode and silences media playback (the read-aloud reply).
+    // cancel() with no take running only tears SCO down.
+    await _rec.cancel().catchError((_) {});
     if (path == null) return null;
     final f = File(path);
     try {
