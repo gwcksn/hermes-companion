@@ -1,0 +1,103 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="400" height="400" role="img" aria-label="Hermes singing" style="overflow: visible">
+<style>
+.g{transform-box:fill-box;transform-origin:50% 100%}
+.c{transform-box:fill-box;transform-origin:center}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes bobfast{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes tilt{0%,100%{transform:rotate(-3deg)}50%{transform:rotate(3deg)}}
+@keyframes thinktilt{0%,100%{transform:rotate(2deg)}50%{transform:rotate(7deg)}}
+@keyframes breathe{0%,100%{transform:scale(1,1)}50%{transform:scale(1.02,1.05)}}
+@keyframes hop{0%,100%{transform:translateY(0) scale(1,1)}12%{transform:translateY(0) scale(1.06,0.92)}45%{transform:translateY(-22px) scale(0.96,1.06)}75%{transform:translateY(0) scale(1.05,0.94)}}
+@keyframes shake{0%,60%,100%{transform:translateX(0)}65%{transform:translateX(-3px)}70%{transform:translateX(3px)}75%{transform:translateX(-3px)}80%{transform:translateX(3px)}85%{transform:translateX(-2px)}90%{transform:translateX(0)}}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(0.1)}}
+@keyframes look{0%,30%,100%{transform:translateX(0)}38%,55%{transform:translateX(-4px)}63%,80%{transform:translateX(4px)}}
+@keyframes wingL{0%,100%{transform:rotate(0deg)}50%{transform:rotate(10deg)}}
+@keyframes wingR{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-10deg)}}
+@keyframes ring{0%{opacity:0.5;transform:scale(0.96)}100%{opacity:0;transform:scale(1.08)}}
+@keyframes dot{0%,60%,100%{opacity:0.25}20%{opacity:1}}
+@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+@keyframes code{0%{transform:scaleX(0.25)}60%,100%{transform:scaleX(1)}}
+@keyframes sweep{0%{transform:translateX(-26px)}100%{transform:translateX(26px)}}
+@keyframes follow{0%{transform:translateX(-4px)}100%{transform:translateX(4px)}}
+@keyframes talk{0%{transform:scaleY(0.25)}100%{transform:scaleY(1)}}
+@keyframes arcr{0%{opacity:0;transform:translateX(0)}40%{opacity:1}100%{opacity:0;transform:translateX(6px)}}
+@keyframes arcl{0%{opacity:0;transform:translateX(0)}40%{opacity:1}100%{opacity:0;transform:translateX(-6px)}}
+@keyframes twinkle{0%,100%{transform:scale(0);opacity:0}50%{transform:scale(1);opacity:1}}
+@keyframes pop{0%,10%{transform:scale(0)}22%{transform:scale(1.2)}30%,85%{transform:scale(1)}100%{transform:scale(0)}}
+@keyframes drip{0%{transform:translateY(0);opacity:1}80%{transform:translateY(16px);opacity:0}100%{transform:translateY(16px);opacity:0}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes zfloat{0%{transform:translate(0px,0px);opacity:0}20%{opacity:1}100%{transform:translate(18px,-26px);opacity:0}}
+.bob{animation:bob 3.4s ease-in-out infinite}
+.bobfast{animation:bobfast 0.5s ease-in-out infinite}
+.tilt{animation:tilt 3s ease-in-out infinite}
+.thinktilt{animation:thinktilt 3.6s ease-in-out infinite}
+.breathe{animation:breathe 4.2s ease-in-out infinite}
+.hop{animation:hop 1.4s ease-in-out infinite}
+.shake{animation:shake 2.4s ease-in-out infinite}
+.blink{animation:blink 5s infinite}
+.look{animation:look 9s ease-in-out infinite}
+.wl{transform-box:fill-box;transform-origin:100% 50%;animation:wingL 4s ease-in-out infinite}
+.wr{transform-box:fill-box;transform-origin:0% 50%;animation:wingR 4s ease-in-out infinite}
+.ring{animation:ring 2s ease-out infinite}
+.dot{animation:dot 1.2s ease-in-out infinite}
+.spin{animation:spin 3s linear infinite}
+.code{transform-box:fill-box;transform-origin:0% 50%;animation:code 1.6s ease-in-out infinite}
+.sweep{animation:sweep 1.8s ease-in-out infinite alternate}
+.follow{animation:follow 1.8s ease-in-out infinite alternate}
+.talk{animation:talk 0.4s ease-in-out infinite alternate}
+.arcr{animation:arcr 1.2s ease-out infinite}
+.arcl{animation:arcl 1.2s ease-out infinite}
+.twinkle{animation:twinkle 1.6s ease-in-out infinite}
+.pop{animation:pop 2.8s ease-in-out infinite}
+.drip{animation:drip 1.6s ease-in infinite}
+.pulse{animation:pulse 0.8s ease-in-out infinite}
+.zf{animation:zfloat 3.2s ease-in infinite}
+@keyframes sway{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+@keyframes heart{0%{transform:translateY(10px) scale(0.6);opacity:0}20%{opacity:1}100%{transform:translateY(-34px) scale(1.1);opacity:0}}
+@keyframes jit{0%,100%{transform:translateX(0)}25%{transform:translateX(-1.5px)}75%{transform:translateX(1.5px)}}
+@keyframes ringclk{0%,100%{transform:rotate(-9deg)}50%{transform:rotate(9deg)}}
+@keyframes ringarc{0%,100%{opacity:1}50%{opacity:0.15}}
+@keyframes notefloat{0%{transform:translate(0px,10px) rotate(0deg);opacity:0}15%{opacity:1}100%{transform:translate(10px,-34px) rotate(15deg);opacity:0}}
+@keyframes sing{0%{transform:scaleY(0.5)}100%{transform:scaleY(1)}}
+.sway{animation:sway 1.6s ease-in-out infinite}
+.hf{animation:heart 2.4s ease-out infinite}
+.jit{animation:jit 0.1s linear infinite}
+.rk{animation:ringclk 0.12s ease-in-out infinite}
+.ringarc{animation:ringarc 0.25s steps(1) infinite}
+.nt{animation:notefloat 2.4s ease-out infinite}
+.sing{animation:sing 0.8s ease-in-out infinite alternate}
+@media (prefers-reduced-motion:reduce){.g,.c,.wl,.wr,.code,.sweep,.follow,.talk,.zf,.drip{animation:none}}
+</style>
+<ellipse cx="100" cy="186" rx="52" ry="7" fill="#000000" opacity="0.4"></ellipse>
+<g class="g sway" style="animation-duration: 1.2s">
+<g class="wl" style="animation-duration: 0.9s"><ellipse cx="34" cy="112" rx="16" ry="30" fill="#FFE9C7" transform="rotate(-18 34 112)"></ellipse></g>
+<g class="wr" style="animation-duration: 0.9s"><ellipse cx="166" cy="112" rx="16" ry="30" fill="#FFE9C7" transform="rotate(18 166 112)"></ellipse></g>
+<ellipse cx="100" cy="108" rx="68" ry="66" fill="#FFD6A5"></ellipse>
+<ellipse cx="100" cy="134" rx="40" ry="28" fill="#FFEBD0"></ellipse>
+<path d="M88 44 Q92 28 100 36 Q108 28 112 44" fill="none" stroke="#FFB87A" stroke-width="6" stroke-linecap="round"></path>
+<ellipse cx="55" cy="118" rx="11" ry="6.5" fill="#FF9AA2" opacity="0.8"></ellipse>
+<ellipse cx="145" cy="118" rx="11" ry="6.5" fill="#FF9AA2" opacity="0.8"></ellipse>
+<path d="M66 102 Q76 92 86 102" fill="none" stroke="#2B2233" stroke-width="5" stroke-linecap="round"></path>
+<path d="M114 102 Q124 92 134 102" fill="none" stroke="#2B2233" stroke-width="5" stroke-linecap="round"></path>
+<g class="c sing">
+<ellipse cx="100" cy="124" rx="9" ry="11" fill="#C2475B"></ellipse>
+<ellipse cx="100" cy="129" rx="5" ry="3.5" fill="#FF9AA2"></ellipse>
+</g>
+</g>
+<g transform="translate(160 78)"><g class="c nt">
+<ellipse cx="-3" cy="2" rx="5" ry="3.5" fill="#7FD8FF" transform="rotate(-20 -3 2)"></ellipse>
+<path d="M1 1V-16Q9 -14 10 -6" fill="none" stroke="#7FD8FF" stroke-width="3" stroke-linecap="round"></path>
+</g></g>
+<g transform="translate(40 70)"><g class="c nt" style="animation-delay: 0.6s">
+<ellipse cx="-3" cy="2" rx="5" ry="3.5" fill="#FF9ACD" transform="rotate(-20 -3 2)"></ellipse>
+<path d="M1 1V-16Q9 -14 10 -6" fill="none" stroke="#FF9ACD" stroke-width="3" stroke-linecap="round"></path>
+</g></g>
+<g transform="translate(174 40)"><g class="c nt" style="animation-delay: 1.2s">
+<ellipse cx="-3" cy="2" rx="5" ry="3.5" fill="#FF9ACD" transform="rotate(-20 -3 2)"></ellipse>
+<path d="M1 1V-16Q9 -14 10 -6" fill="none" stroke="#FF9ACD" stroke-width="3" stroke-linecap="round"></path>
+</g></g>
+<g transform="translate(26 36)"><g class="c nt" style="animation-delay: 1.8s">
+<ellipse cx="-3" cy="2" rx="5" ry="3.5" fill="#7FD8FF" transform="rotate(-20 -3 2)"></ellipse>
+<path d="M1 1V-16Q9 -14 10 -6" fill="none" stroke="#7FD8FF" stroke-width="3" stroke-linecap="round"></path>
+</g></g>
+</svg>

@@ -1,0 +1,23 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-10-15T10:45:00Z" },
+  "title": "Hermes Companion",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 740, "h": 360, "title": "Chat", "is_interactive": true },
+    "Listening.dc.html": { "x": 820, "y": 0, "w": 740, "h": 360, "title": "Listening", "is_interactive": true },
+    "Settings.dc.html": { "x": 1640, "y": 0, "w": 740, "h": 360, "title": "Connection", "is_interactive": true },
+    "Clock.dc.html": { "x": 0, "y": 480, "w": 740, "h": 360, "title": "Clock page", "is_interactive": true },
+    "Weather.dc.html": { "x": 820, "y": 480, "w": 740, "h": 360, "title": "Weather page", "is_interactive": true },
+    "Avatar.dc.html": { "x": 0, "y": 960, "w": 1260, "h": 1240, "title": "Avatar states" },
+    "Setup1.dc.html": { "x": 0, "y": 2320, "w": 740, "h": 360, "title": "Setup 1: Server", "is_interactive": true },
+    "Setup2.dc.html": { "x": 820, "y": 2320, "w": 740, "h": 360, "title": "Setup 2: Sign in", "is_interactive": true },
+    "Setup3.dc.html": { "x": 1640, "y": 2320, "w": 740, "h": 360, "title": "Setup 3: Profile", "is_interactive": true }
+  },
+  "order": ["Main.dc.html", "Listening.dc.html", "Settings.dc.html", "Clock.dc.html", "Weather.dc.html", "Avatar.dc.html", "Setup1.dc.html", "Setup2.dc.html", "Setup3.dc.html"],
+  "notes": {
+    "t1": { "x": 0, "y": -300, "text": "Hermes Companion: Galaxy S8, landscape, 740 × 360", "kind": "title1", "maxW": 2380 }
+  },
+  "designSystems": []
+}

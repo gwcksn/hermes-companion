@@ -1,0 +1,255 @@
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:hermes_companion/app.dart';
+import 'package:hermes_companion/avatar/avatar_state.dart';
+import 'package:hermes_companion/data/auth/credential_store.dart';
+import 'package:hermes_companion/data/gateway/chat_controller.dart';
+import 'package:hermes_companion/data/hermes_client.dart';
+import 'package:hermes_companion/data/notifications/notifications_provider.dart';
+import 'package:hermes_companion/data/settings_store.dart';
+import 'package:hermes_companion/data/voice/recorder.dart';
+import 'package:hermes_companion/data/weather_provider.dart';
+import 'package:hermes_companion/screens/home_shell.dart';
+import 'package:hermes_companion/theme/tokens.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import 'fakes/fake_gateway.dart';
+import 'fakes/fake_hermes.dart';
+import 'fakes/fake_notifications.dart';
+import 'fakes/fake_recorder.dart';
+import 'fixtures/open_meteo.dart';
+
+const _url = 'https://bash.example.ts.net';
+
+class _FixtureWeather extends WeatherClient {
+  @override
+  Future<Map<String, dynamic>> fetch() async => openMeteoFixture();
+}
+
+/// Load the bundled fonts so overflow checks use real glyph widths, not the test font's squares.
+Future<void> _loadFonts() async {
+  for (final (family, files) in [
+    ('Fredoka', ['Fredoka-500', 'Fredoka-600']),
+    ('Nunito', ['Nunito-600', 'Nunito-700']),
+  ]) {
+    final loader = FontLoader(family);
+    for (final f in files) {
+      loader.addFont(rootBundle.load('assets/fonts/$f.ttf'));
+    }
+    await loader.load();
+  }
+}
+
+class _Harness {
+  _Harness({this.initialPrefs = const {}});
+
+  final Map<String, Object> initialPrefs;
+  final store = MemoryCredentialStore();
+  final server = FakeHermes();
+  final gateway = FakeGateway();
+  final notifications = FakeNotificationsBridge();
+  late SharedPreferences prefs;
+
+  Future<void> pump(WidgetTester tester) async {
+    tester.view.physicalSize = const Size(2960, 1440); // Galaxy S8 landscape
+    tester.view.devicePixelRatio = 3.5;
+    addTearDown(tester.view.reset);
+    // The avatar animates forever; reduced motion freezes it so pumpAndSettle can settle.
+    tester.platformDispatcher.accessibilityFeaturesTestValue = const FakeAccessibilityFeatures(disableAnimations: true);
+    addTearDown(tester.platformDispatcher.clearAccessibilityFeaturesTestValue);
+    SharedPreferences.setMockInitialValues(initialPrefs);
+    prefs = await SharedPreferences.getInstance();
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          sharedPrefsProvider.overrideWithValue(prefs),
+          credentialStoreProvider.overrideWithValue(store),
+          hermesClientFactoryProvider.overrideWithValue((url) => fakeClient(url, store, server)),
+          weatherClientProvider.overrideWithValue(_FixtureWeather()),
+          gatewayConnectorProvider.overrideWithValue(gateway.connect),
+          notificationsBridgeProvider.overrideWithValue(notifications),
+          recorderFactoryProvider.overrideWithValue(FakeRecorder.new),
+        ],
+        child: const HermesApp(),
+      ),
+    );
+    await tester.pumpAndSettle();
+  }
+}
+
+/// The TextField under a LabeledField's label.
+Finder _field(String label) => find.descendant(
+  of: find.ancestor(of: find.text(label), matching: find.byType(Column)).first,
+  matching: find.byType(TextField),
+);
+
+void main() {
+  setUpAll(_loadFonts);
+
+  test('tokens match tokens.json', () {
+    expect(HColors.bg, const Color(0xFF0B0A10));
+    expect(HColors.peach, const Color(0xFFFFD6A5));
+    expect(HSizes.designSize, const Size(740, 360));
+    expect(HSizes.stage, 268);
+    expect(AvatarState.values.map((s) => s.name), [
+      'idle', 'listening', 'thinking', 'working', 'searching', 'speaking', //
+      'done', 'oops', 'sleeping', 'happy', 'alarm', 'singing',
+    ]);
+  });
+
+  testWidgets('first run: address, sign in, profile, then home; settings are saved', (tester) async {
+    final h = _Harness();
+    await h.pump(tester);
+    expect(find.text('Find your Hermes'), findsOneWidget);
+
+    await tester.enterText(_field('Hermes address'), 'bash.example.ts.net');
+    await tester.tap(find.text('Next'));
+    await tester.pumpAndSettle();
+    expect(find.text('Username'), findsOneWidget);
+
+    await tester.enterText(_field('Username'), 'admin');
+    await tester.enterText(_field('Password'), 'wrong');
+    await tester.tap(find.widgetWithText(InkWell, 'Sign in'));
+    await tester.pumpAndSettle();
+    expect(find.text('Wrong username or password'), findsOneWidget);
+    expect(h.store.creds, isNull, reason: 'a rejected password is not kept');
+
+    await tester.enterText(_field('Password'), 'secret');
+    await tester.tap(find.widgetWithText(InkWell, 'Sign in'));
+    await tester.pumpAndSettle();
+    expect(find.text('Connected. Talking to default, model bash-pro'), findsOneWidget);
+
+    await tester.tap(find.text('crawly'));
+    await tester.pumpAndSettle();
+    expect(find.text('Connected. Talking to crawly, model crawly-model'), findsOneWidget);
+
+    await tester.tap(find.text('Start chatting'));
+    await tester.pumpAndSettle();
+    expect(find.byType(HomeShell), findsOneWidget);
+    expect(find.text('Connected'), findsOneWidget);
+
+    expect(h.store.creds?.username, 'admin');
+    expect(h.store.cookies, {'hermes_session': 's1'});
+    expect(h.prefs.getString('settings.serverUrl'), _url);
+    expect(h.prefs.getString('settings.profile'), 'crawly');
+    expect(h.prefs.getBool('settings.setupComplete'), isTrue);
+  });
+
+  testWidgets('configured app opens home; pages, listening and settings render', (tester) async {
+    final h = _Harness(
+      initialPrefs: {'settings.serverUrl': _url, 'settings.profile': 'default', 'settings.setupComplete': true},
+    );
+    await h.store.save(const Credentials(server: _url, username: 'admin', password: 'secret'));
+    await h.pump(tester);
+    expect(find.byType(HomeShell), findsOneWidget);
+    expect(find.text('Connected'), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('Clock page'));
+    await tester.pumpAndSettle();
+    expect(find.text('Yogyakarta · WIB'), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('Weather page'));
+    await tester.pumpAndSettle();
+    expect(find.text('Partly cloudy'), findsOneWidget);
+
+    await tester.tap(find.bySemanticsLabel('Chat page'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.bySemanticsLabel('Talk to Hermes'));
+    // Listening ticks a timer, so it never settles: step frames by hand.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    expect(find.text('Tap the square to send'), findsOneWidget);
+    await tester.tap(find.text('Cancel'));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.bySemanticsLabel('Connection settings'));
+    await tester.pumpAndSettle();
+    expect(find.text('Signed in as admin'), findsOneWidget);
+    expect(find.text('Save and connect'), findsOneWidget);
+  });
+
+  testWidgets('server unreachable shows Offline and the oops avatar', (tester) async {
+    final h = _Harness(initialPrefs: {'settings.serverUrl': _url, 'settings.setupComplete': true});
+    h.server.reachable = false;
+    await h.pump(tester);
+    expect(find.text('Offline'), findsOneWidget);
+    expect(find.text('Oops'), findsOneWidget);
+  });
+
+  testWidgets('chat page: streamed reply, approval card and clarify card fit and answer', (tester) async {
+    final h = _Harness(initialPrefs: {'settings.serverUrl': _url, 'settings.setupComplete': true});
+    await h.store.save(const Credentials(server: _url, username: 'admin', password: 'secret'));
+    await h.pump(tester);
+    expect(find.text('Say something to Hermes'), findsOneWidget);
+
+    await tester.enterText(find.byType(TextField), 'Is it going to rain?');
+    await tester.tap(find.bySemanticsLabel('Send message'));
+    await tester.pumpAndSettle();
+    final conn = h.gateway.last;
+    conn.event('message.start', 'live-1');
+    conn.event('message.delta', 'live-1', {'text': 'Probably this evening. '});
+    await tester.pumpAndSettle();
+    expect(find.text('Probably this evening.'), findsNothing); // still streaming, with trailing space
+    expect(find.bySemanticsLabel('Stop Hermes'), findsOneWidget);
+    conn.event('message.complete', 'live-1', {'text': 'Probably this evening, take a jacket.', 'status': 'complete'});
+    await tester.pumpAndSettle();
+    expect(find.text('Probably this evening, take a jacket.'), findsOneWidget);
+
+    conn.serverRequest('req-1', 'approval', {
+      'session_id': 'live-1',
+      'request_id': 'a1',
+      'command': 'curl wttr.in/Yogyakarta',
+    });
+    await tester.pumpAndSettle();
+    expect(find.text('Hermes wants to run'), findsOneWidget);
+    await tester.tap(find.text('Allow once'));
+    await tester.pumpAndSettle();
+    expect(conn.replies.single['result'], {'choice': 'once'});
+    expect(find.text('Hermes wants to run'), findsNothing);
+
+    conn.serverRequest('req-2', 'clarify', {
+      'session_id': 'live-1',
+      'questions': [
+        {
+          'qid': 'q1',
+          'question': 'Morning or evening reminder?',
+          'choices': ['Morning', 'Evening'],
+        },
+      ],
+    });
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Evening'));
+    await tester.pumpAndSettle();
+    expect(conn.replies.last['result'], {
+      'answers': {'q1': 'Evening'},
+    });
+  });
+
+  testWidgets('typing bubble shows thinking/working status beside it in one row', (tester) async {
+    final h = _Harness(initialPrefs: {'settings.serverUrl': _url, 'settings.setupComplete': true});
+    await h.store.save(const Credentials(server: _url, username: 'admin', password: 'secret'));
+    await h.pump(tester);
+
+    await tester.enterText(find.byType(TextField), 'hi');
+    await tester.tap(find.bySemanticsLabel('Send message'));
+    await tester.pumpAndSettle();
+    final conn = h.gateway.last;
+    // Thinking right after send: dots bubble + label, no separate activity line.
+    expect(find.text('thinking on it'), findsOneWidget);
+    expect(find.text('Working on it…'), findsNothing);
+
+    conn.event('message.start', 'live-1');
+    conn.event('tool.start', 'live-1', {'tool_id': 't1', 'name': 'terminal'});
+    await tester.pumpAndSettle();
+    expect(find.text('thinking on it'), findsNothing);
+    expect(find.text('working on it'), findsOneWidget);
+    expect(find.text('Working on it…'), findsNothing);
+
+    conn.event('message.delta', 'live-1', {'text': 'Hello.'});
+    await tester.pumpAndSettle();
+    expect(find.text('working on it'), findsNothing);
+    expect(find.text('Hello.'), findsOneWidget);
+  });
+}
