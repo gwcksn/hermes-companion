@@ -169,4 +169,4 @@ Fixtures live in `test/fakes/{fake_hermes.dart,fake_gateway.dart}` and `test/fix
 
 ## License & status
 
-Private project. No license file yet. Designed for a single owner's bedside display — not a general-purpose Hermes client.
+Released under the [MIT License](LICENSE). Designed around a single owner's bedside display, so it is not a general-purpose Hermes client.
