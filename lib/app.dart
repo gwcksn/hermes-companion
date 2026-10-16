@@ -38,13 +38,14 @@ class _HermesAppState extends ConsumerState<HermesApp> {
       title: 'Hermes Companion',
       debugShowCheckedModeBanner: false,
       theme: buildAppTheme(),
-      // Every route renders on the 740x360 design canvas, scaled to the screen.
+      // Every route renders on the 740x360 (portrait: 360x740) design canvas, scaled to the screen.
       builder: (context, child) {
         final mq = MediaQuery.of(context);
-        final d = HSizes.designSize;
+        final d = HSizes.designFor(mq.size);
         final scale = math.min(mq.size.width / d.width, mq.size.height / d.height);
         return AmbientOverlay(
           child: ScaledStage(
+            size: d,
             offset: ref.watch(ambientProvider.select((a) => a.shift)),
             child: MediaQuery(
               data: mq.copyWith(
