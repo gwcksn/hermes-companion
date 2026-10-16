@@ -104,20 +104,32 @@ void main() {
     }
   });
 
-  test('sings from 3 minutes idle, sleeps at 10', () {
+  test('starts a random activity at 3 minutes idle, sleeps at 10', () {
     fakeAsync((async) {
       final c = _container(prefs);
       addTearDown(c.dispose);
       c.listen(ambientProvider, (_, _) {});
       async.flushMicrotasks();
 
-      async.elapse(singAfter - const Duration(seconds: 1));
+      async.elapse(activityStartAfter - const Duration(seconds: 1));
       expect(c.read(avatarProvider), AvatarState.idle);
       async.elapse(const Duration(seconds: 2));
-      expect(c.read(avatarProvider), AvatarState.singing);
+      expect(idleActivities, contains(c.read(avatarProvider)));
       expect(c.read(ambientProvider).asleep, isFalse);
 
-      async.elapse(sleepAfter - singAfter);
+      // A new activity every minute, never the same one twice running.
+      var last = c.read(avatarProvider);
+      for (var i = 0; i < 6; i++) {
+        async.elapse(activityEvery);
+        final now = c.read(avatarProvider);
+        if (i < 5) {
+          expect(idleActivities, contains(now));
+          expect(now, isNot(last));
+        }
+        last = now;
+      }
+
+      async.elapse(sleepAfter - activityStartAfter - activityEvery * 6 + const Duration(seconds: 1));
       expect(c.read(avatarProvider), AvatarState.sleeping);
       expect(c.read(ambientProvider).asleep, isTrue);
     });
@@ -130,7 +142,7 @@ void main() {
       c.listen(ambientProvider, (_, _) {});
       async.flushMicrotasks();
 
-      async.elapse(singAfter + const Duration(seconds: 1));
+      async.elapse(activityStartAfter + const Duration(seconds: 1));
       c.read(ambientProvider.notifier).poke(touch: true);
       expect(c.read(avatarProvider), AvatarState.happy);
       async.elapse(happyFor + const Duration(seconds: 1));
@@ -151,9 +163,9 @@ void main() {
       c.listen(ambientProvider, (_, _) {});
       async.flushMicrotasks();
 
-      async.elapse(singAfter + const Duration(seconds: 1));
+      async.elapse(activityStartAfter + const Duration(seconds: 1));
       c.read(ambientProvider.notifier).poke(touch: true);
-      async.elapse(happyFor + singAfter - const Duration(seconds: 10));
+      async.elapse(happyFor + activityStartAfter - const Duration(seconds: 10));
       expect(c.read(avatarProvider), AvatarState.idle);
     });
   });
@@ -184,7 +196,7 @@ void main() {
       async.flushMicrotasks();
 
       c.read(avatarProvider.notifier).set(AvatarState.working);
-      async.elapse(singAfter * 2);
+      async.elapse(activityStartAfter * 2);
       expect(c.read(avatarProvider), AvatarState.working);
     });
   });

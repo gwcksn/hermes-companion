@@ -13,7 +13,7 @@ import 'dart:typed_data';
 import 'package:flutter/animation.dart';
 import 'package:flutter/painting.dart';
 
-enum Prop { tx, ty, sx, sy, rot, opacity }
+enum Prop { tx, ty, sx, sy, rot, opacity, dash }
 
 /// CSS timing functions used by the avatar SVGs.
 abstract final class Ease {
@@ -104,7 +104,14 @@ sealed class Node {
 }
 
 class Group extends Node {
-  Group(this.children, {this.anims = const [], this.origin, this.translate = Offset.zero, this.rotate = 0});
+  Group(
+    this.children, {
+    this.anims = const [],
+    this.origin,
+    this.translate = Offset.zero,
+    this.rotate = 0,
+    this.scale = 1,
+  });
 
   final List<Node> children;
   final List<Anim> anims;
@@ -115,6 +122,7 @@ class Group extends Node {
   /// Static `transform="translate(..) rotate(..)"` attribute.
   final Offset translate;
   final double rotate;
+  final double scale;
 
   @override
   late final Rect bounds = _computeBounds();
@@ -141,9 +149,10 @@ class Group extends Node {
     final a = alpha * _prop(Prop.opacity, t, 1);
     if (a <= 0.001) return;
     canvas.save();
-    if (translate != Offset.zero || rotate != 0) {
+    if (translate != Offset.zero || rotate != 0 || scale != 1) {
       canvas.translate(translate.dx, translate.dy);
       if (rotate != 0) canvas.rotate(rotate * math.pi / 180);
+      if (scale != 1) canvas.scale(scale);
     }
     if (anims.isNotEmpty) {
       final b = bounds;
@@ -242,6 +251,37 @@ class PathShape extends Shape {
 
   @override
   Rect get bounds => path.getBounds();
+}
+
+/// A stroked path revealed like a `stroke-dasharray`/`stroke-dashoffset` draw-on animation.
+/// [Prop.dash] is the dashoffset (0 = fully drawn, [dashArray] = nothing drawn); opacity animates too.
+class DrawPath extends Node {
+  DrawPath(String d, this.style, {required this.anim, required this.dashArray}) : path = parseSvgPath(d);
+
+  final Style style;
+  final Anim anim;
+  final double dashArray;
+  final Path path;
+
+  @override
+  Rect get bounds => path.getBounds();
+
+  @override
+  void paint(Canvas canvas, double t, double alpha) {
+    final a = alpha * style.opacity * (anim.value(Prop.opacity, t) ?? 1);
+    final fraction = 1 - (anim.value(Prop.dash, t) ?? 0) / dashArray;
+    if (a <= 0.001 || fraction <= 0) return;
+    final paint = Paint()
+      ..isAntiAlias = true
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = style.strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..color = style.stroke!.withValues(alpha: style.stroke!.a * a);
+    for (final m in path.computeMetrics()) {
+      canvas.drawPath(m.extractPath(0, m.length * fraction.clamp(0.0, 1.0)), paint);
+    }
+  }
 }
 
 class TextShape extends Node {

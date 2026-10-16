@@ -1,4 +1,4 @@
-// The 12 avatar states, ported 1:1 from assets/avatar/*.svg (200x200 viewBox).
+// The 21 avatar states (12 core + 9 idle activities), ported 1:1 from assets/avatar/*.svg (200x200 viewBox).
 // Keyframes and timings are copied from each SVG's <style>; see engine.dart for semantics.
 import 'package:flutter/painting.dart';
 
@@ -123,6 +123,108 @@ const _sing = Keyframes({
   Prop.sy: [(0, 0.5), (1, 1)],
 });
 
+// idle activities
+const _sip = Keyframes({
+  Prop.ty: [(0, 0), (0.12, 0), (0.3, -14), (0.58, -14), (0.78, 0), (1, 0)],
+  Prop.rot: [(0, 0), (0.12, 0), (0.3, -5), (0.58, -5), (0.78, 0), (1, 0)],
+});
+const _steam = Keyframes({
+  Prop.ty: [(0, 3), (1, -6)],
+  Prop.opacity: [(0, 0), (0.3, 0.8), (1, 0)],
+});
+const _scan = Keyframes({
+  Prop.tx: [(0, -6), (0.08, -6), (0.46, 6), (0.54, 6), (0.6, -6), (1, -6)],
+});
+const _flip = Keyframes({
+  Prop.sx: [(0, 1), (0.55, 1), (0.78, -1), (0.92, -1), (1, 1)],
+  Prop.opacity: [(0, 1), (0.55, 1), (0.78, 1), (0.92, 0), (1, 0)],
+});
+const _starfall = Keyframes({
+  Prop.tx: [(0, 0), (0.62, 0), (0.92, -62), (1, -62)],
+  Prop.ty: [(0, 0), (0.62, 0), (0.92, 48), (1, 48)],
+  Prop.opacity: [(0, 0), (0.62, 0), (0.68, 1), (0.92, 0), (1, 0)],
+});
+const _lookup = Keyframes({
+  Prop.rot: [(0, -4), (0.5, 3), (1, -4)],
+});
+const _levitate = Keyframes({
+  Prop.ty: [(0, 0), (0.5, -9), (1, 0)],
+});
+const _shadowfloat = Keyframes({
+  Prop.sx: [(0, 1), (0.5, 0.78), (1, 1)],
+  Prop.sy: [(0, 1), (0.5, 0.78), (1, 1)],
+  Prop.opacity: [(0, 0.4), (0.5, 0.22), (1, 0.4)],
+});
+const _aura = Keyframes({
+  Prop.sx: [(0, 0.96), (0.5, 1.08), (1, 0.96)],
+  Prop.sy: [(0, 0.96), (0.5, 1.08), (1, 0.96)],
+  Prop.opacity: [(0, 0.14), (0.5, 0.28), (1, 0.14)],
+});
+const _orb = Keyframes({
+  Prop.ty: [(0, 0), (1, -44)],
+  Prop.opacity: [(0, 0), (0.2, 0.9), (1, 0)],
+});
+const _mash = Keyframes({
+  Prop.ty: [(0, 0), (0.5, 1.6), (1, 0)],
+});
+const _gamehero = Keyframes({
+  Prop.tx: [(0, 0), (0.5, 38), (1, 0)],
+});
+const _gameenemy = Keyframes({
+  Prop.tx: [(0, 0), (1, -14)],
+});
+const _tongue = Keyframes({
+  Prop.tx: [(0, 0), (0.5, 3), (1, 0)],
+});
+const _draw = Keyframes({
+  Prop.dash: [(0, 90), (0.4, 0), (0.8, 0), (1, 0)],
+  Prop.opacity: [(0, 1), (0.8, 1), (0.95, 0), (1, 0)],
+});
+const _draw2 = Keyframes({
+  Prop.dash: [(0, 60), (0.35, 60), (0.65, 0), (0.8, 0), (1, 0)],
+  Prop.opacity: [(0, 1), (0.8, 1), (0.95, 0), (1, 0)],
+});
+const _pencil = Keyframes({
+  Prop.tx: [(0, -14), (0.2, 8), (0.4, 6), (0.6, -4), (0.8, 14), (1, -14)],
+  Prop.ty: [(0, 6), (0.2, -6), (0.4, 8), (0.6, 2), (0.8, 6), (1, 6)],
+  Prop.rot: [(0, -6), (0.2, 4), (0.4, -3), (0.6, 0), (0.8, 5), (1, -6)],
+});
+const _stBody = Keyframes({
+  Prop.sx: [(0, 1), (0.22, 1), (0.38, 0.95), (0.66, 0.95), (0.76, 1.03), (0.82, 1), (1, 1)],
+  Prop.sy: [(0, 1), (0.22, 1), (0.38, 1.1), (0.66, 1.1), (0.76, 0.97), (0.82, 1), (1, 1)],
+  Prop.rot: [(0, 0), (0.76, 0), (0.82, -3), (0.86, 3), (0.9, -2), (0.94, 0), (1, 0)],
+});
+Keyframes _stWing(double dir) => Keyframes({
+  Prop.tx: [(0, 0), (0.22, 0), (0.38, 8 * dir), (0.66, 8 * dir), (0.76, 0), (1, 0)],
+  Prop.ty: [(0, 0), (0.22, 0), (0.38, -18), (0.66, -18), (0.76, 0), (1, 0)],
+  Prop.rot: [(0, 0), (0.22, 0), (0.38, -42 * dir), (0.66, -42 * dir), (0.76, 0), (1, 0)],
+  Prop.sx: [(0, 1), (0.22, 1), (0.38, 1.25), (0.66, 1.25), (0.76, 1), (1, 1)],
+  Prop.sy: [(0, 1), (0.22, 1), (0.38, 1.25), (0.66, 1.25), (0.76, 1), (1, 1)],
+});
+final _stWl = _stWing(-1);
+final _stWr = _stWing(1);
+const _stOpen = Keyframes({
+  Prop.opacity: [(0, 1), (0.3, 1), (0.34, 0), (0.7, 0), (0.74, 1), (1, 1)],
+});
+const _stShut = Keyframes({
+  Prop.opacity: [(0, 0), (0.3, 0), (0.34, 1), (0.7, 1), (0.74, 0), (1, 0)],
+});
+const _cycle = Keyframes({
+  Prop.sx: [(0, 0.6), (0.05, 1), (0.28, 1), (0.33, 0.6), (1, 0.6)],
+  Prop.sy: [(0, 0.6), (0.05, 1), (0.28, 1), (0.33, 0.6), (1, 0.6)],
+  Prop.opacity: [(0, 0), (0.05, 1), (0.28, 1), (0.33, 0), (1, 0)],
+});
+const _daydrift = Keyframes({
+  Prop.ty: [(0, 0), (0.5, -3), (1, 0)],
+});
+const _peek = Keyframes({
+  Prop.tx: [(0, 0), (0.18, 0), (0.26, 7), (0.6, 7), (0.7, 0), (1, 0)],
+  Prop.ty: [(0, 0), (0.18, 0), (0.26, -7), (0.6, -7), (0.7, 0), (1, 0)],
+});
+const _peeknod = Keyframes({
+  Prop.ty: [(0, 0), (0.68, 0), (0.74, 5), (0.8, 0), (0.86, 4), (0.92, 0), (1, 0)],
+});
+
 // transform-box: fill-box origins
 const _bottomCenter = Offset(0.5, 1); // .g
 const _center = Offset(0.5, 0.5); // .c
@@ -140,6 +242,13 @@ const _clockOrange = Color(0xFFFF9F6B);
 const _clockFace = Color(0xFFFDF6E3);
 const _notePink = Color(0xFFFF9ACD);
 const _thought = HColors.text;
+const _cup = Color(0xFFF4F0EA);
+const _coffeeDrink = Color(0xFF7A5240);
+const _foam = Color(0xFFF4E3C8);
+const _pageShade = Color(0xFFE8E2F5);
+const _moon = Color(0xFFFFE9A8);
+const _gameGround = Color(0xFF2A5A48);
+const _clay = Color(0xFFC98F63);
 
 // ---- shape helpers -----------------------------------------------------------
 
@@ -206,9 +315,15 @@ List<Node> _happyEyes({double peak = 90}) => [
   _stroke('M114 102 Q124 $peak 134 102', AvatarColors.ink, 5),
 ];
 
-Group _root(Anim bodyAnim, List<Node> body, {List<Node> before = const [], List<Node> after = const []}) => Group([
+Group _root(
+  Anim bodyAnim,
+  List<Node> body, {
+  List<Node> before = const [],
+  List<Node> after = const [],
+  Node? shadow,
+}) => Group([
   ...before,
-  _groundShadow,
+  shadow ?? _groundShadow,
   Group(body, anims: [bodyAnim], origin: _bottomCenter),
   ...after,
 ]);
@@ -526,6 +641,309 @@ Group _singing() {
   );
 }
 
+// ---- idle activities ---------------------------------------------------------
+
+String _star(double r) {
+  final i = (r * 0.28).toStringAsFixed(1);
+  return 'M0 -${r}L$i -${i}L$r 0L$i ${i}L0 ${r}L-$i ${i}L-$r 0L-$i -${i}Z';
+}
+
+Group _coffee() => _root(_bob.run(3.4, curve: Ease.inOut), [
+  ..._wings(),
+  ..._body(),
+  ..._blush(),
+  ..._happyEyes(peak: 92),
+  _stroke('M91 116 Q100 126 109 116', AvatarColors.ink, 4),
+  Group(
+    [
+      _stroke('M118 148Q132 148 132 158Q132 168 118 168', _cup, 5),
+      const RoundRect(80, 140, 40, 32, 9, Style(fill: _cup)),
+      _e(100, 141, 18, 4.5, _coffeeDrink),
+      _stroke('M95 141Q100 137 105 141', _foam, 2),
+      for (final (i, d) in ['M90 135Q87 130 91 126', 'M100 135Q97 129 101 124', 'M110 135Q107 130 111 126'].indexed)
+        _anim(_stroke(d, _cup, 2.6), _steam.run(2.2, curve: Ease.easeOut, delay: i * 0.7)),
+      _c(77, 158, 7, AvatarColors.wing),
+      _c(130, 159, 7, AvatarColors.wing),
+    ],
+    anims: [_sip.run(5, curve: Ease.inOut)],
+    origin: _center,
+  ),
+]);
+
+Group _reading() {
+  const glass = Style(stroke: HColors.lavender, strokeWidth: 3.5, round: false);
+  return _root(_bob.run(3.4, curve: Ease.inOut), [
+    ..._wings(),
+    ..._body(),
+    ..._blush(),
+    Group(
+      [
+        _blinking([
+          _e(76, 106, 8, 9, AvatarColors.ink),
+          _e(124, 106, 8, 9, AvatarColors.ink),
+          _c(78, 102, 3, _white),
+          _c(126, 102, 3, _white),
+        ]),
+      ],
+      anims: [_scan.run(5, curve: Ease.inOut)],
+      origin: _center,
+    ),
+    const Ellipse(76, 104, 15, 15, glass),
+    const Ellipse(124, 104, 15, 15, glass),
+    PathShape('M91 102Q100 98 109 102', glass),
+    _stroke('M93 123Q100 128 107 123', AvatarColors.ink, 3.5),
+    _fill('M54 134L100 140L146 134L146 170L100 176L54 170Z', HColors.lavender),
+    _fill('M58 130L100 136V170L58 164Z', _cup),
+    _fill('M142 130L100 136V170L142 164Z', _pageShade),
+    _stroke('M66 142L92 146M66 150L92 154M66 158L84 161', HColors.muted, 2.5),
+    _stroke('M108 146L134 142M108 154L134 150M108 162L126 159', HColors.muted, 2.5),
+    _anim(
+      PathShape('M142 130L100 136V170L142 164Z', const Style(fill: _white, stroke: _pageShade, strokeWidth: 1.5)),
+      _flip.run(6, curve: Ease.inOut),
+      origin: _leftMid,
+    ),
+    _c(62, 158, 7, AvatarColors.wing),
+    _c(138, 158, 7, AvatarColors.wing),
+  ]);
+}
+
+Group _stargazing() {
+  Node twinkle(double x, double y, double r, Color color, double delay, double seconds) => Group([
+    _anim(_fill(_star(r), color), _twinkle.run(seconds, curve: Ease.inOut, delay: delay), origin: _center),
+  ], translate: Offset(x, y));
+  return _root(
+    _lookup.run(6, curve: Ease.inOut),
+    [
+      ..._wings(),
+      ..._body(),
+      ..._blush(),
+      _blinking([
+        _e(76, 96, 10, 14, AvatarColors.ink),
+        _e(124, 96, 10, 14, AvatarColors.ink),
+        _c(79, 87, 5, _white),
+        _c(127, 87, 5, _white),
+        _c(72, 104, 2.2, _white),
+        _c(120, 104, 2.2, _white),
+      ]),
+      _e(100, 121, 4.5, 5.5, AvatarColors.mouth),
+    ],
+    before: [
+      _fill('M172 22A15 15 0 1 0 180 48A12 12 0 1 1 172 22Z', _moon),
+      twinkle(30, 44, 7, _moon, 0, 1.8),
+      twinkle(60, 18, 5, HColors.lavender, 0.5, 1.8),
+      twinkle(120, 14, 6, HColors.cyan, 1.0, 1.8),
+      twinkle(24, 98, 5, _moon, 1.3, 1.8),
+      twinkle(178, 92, 5, _white, 0.8, 1.8),
+      twinkle(150, 28, 4, AvatarColors.tuft, 0.3, 2.2),
+      Group([
+        Group(
+          [_stroke('M0 0L16 -12', _white, 2.5, opacity: 0.5), _c(0, 0, 3, _white)],
+          anims: [_starfall.run(7, curve: Ease.easeIn)],
+        ),
+      ], translate: const Offset(176, 16)),
+    ],
+  );
+}
+
+Group _meditating() => Group([
+  _anim(_c(100, 108, 92, HColors.lavender), _aura.run(5, curve: Ease.inOut), origin: _center),
+  _anim(_e(100, 186, 52, 7, _shadow), _shadowfloat.run(5, curve: Ease.inOut), origin: _center),
+  for (final (x, y, r, color, delay) in [
+    (40.0, 150.0, 4.0, HColors.lavender, 0.0),
+    (160.0, 140.0, 5.0, HColors.mint, 1.6),
+    (52.0, 116.0, 3.0, HColors.peach, 3.2),
+    (150.0, 170.0, 3.5, HColors.cyan, 0.8),
+  ])
+    _anim(_c(x, y, r, color), _orb.run(5, curve: Ease.easeOut, delay: delay)),
+  Group(
+    [
+      ..._wings(seconds: 8),
+      ..._body(),
+      ..._blush(),
+      _stroke('M66 100 Q76 109 86 100', AvatarColors.ink, 4.5),
+      _stroke('M114 100 Q124 109 134 100', AvatarColors.ink, 4.5),
+      _c(100, 72, 3.5, HColors.mint),
+      _stroke('M93 118Q100 123 107 118', AvatarColors.ink, 3.5),
+      _e(100, 152, 13, 7, AvatarColors.wing),
+    ],
+    anims: [_levitate.run(5, curve: Ease.inOut)],
+    origin: _bottomCenter,
+  ),
+]);
+
+Group _gaming() => _root(_bobfast.run(0.5, curve: Ease.inOut), [
+  ..._wings(seconds: 0.5),
+  ..._body(),
+  ..._blush(),
+  _stroke('M64 84L86 90M136 84L114 90', AvatarColors.ink, 4),
+  _blinking([
+    _e(76, 102, 8, 10, AvatarColors.ink),
+    _e(124, 102, 8, 10, AvatarColors.ink),
+    _c(79, 98, 3, HColors.mint),
+    _c(127, 98, 3, HColors.mint),
+  ]),
+  _stroke('M92 120Q100 124 108 120', AvatarColors.ink, 3.5),
+  _anim(_e(106, 125, 4.5, 4, HColors.pink), _tongue.run(0.4, curve: Ease.inOut)),
+  Group(
+    [
+      const RoundRect(48, 132, 104, 44, 14, Style(fill: HColors.sky)),
+      const RoundRect(68, 137, 64, 34, 5, Style(fill: HColors.onMint)),
+      _anim(const RoundRect(74, 156, 8, 8, 1.5, Style(fill: HColors.mint)), _gamehero.run(3, curve: Ease.inOut)),
+      _anim(
+        const RoundRect(114, 150, 7, 7, 1.5, Style(fill: HColors.amber)),
+        _gameenemy.run(1.2, curve: Ease.linear, alternate: true),
+      ),
+      _stroke('M72 168H128', _gameGround, 2),
+      _stroke('M58 154H70M64 148V160', HColors.onMint, 4),
+      _c(138, 148, 4, HColors.pink),
+      _c(144, 158, 4, HColors.amber),
+      _c(54, 170, 6.5, AvatarColors.wing),
+      _c(146, 170, 6.5, AvatarColors.wing),
+    ],
+    anims: [_mash.run(0.22, curve: Ease.linear)],
+    origin: _center,
+  ),
+]);
+
+Group _doodling() => _root(_bob.run(3.4, curve: Ease.inOut), [
+  ..._wings(),
+  ..._body(),
+  ..._blush(),
+  Group([_blinking(_eyes(hy: 4))], translate: const Offset(-3, 6)),
+  _stroke('M92 117Q100 124 108 117', AvatarColors.ink, 3.5),
+  // rotate(-6 100 150)
+  Group([
+    Group([
+      const RoundRect(62, 128, 76, 46, 6, Style(fill: _cup)),
+      _stroke('M70 128V124M82 128V124M94 128V124M106 128V124M118 128V124M130 128V124', HColors.placeholder, 3),
+      DrawPath(
+        'M100 166C84 156 82 144 91 142C96 141 99 144 100 147C101 144 104 141 109 142C118 144 116 156 100 166Z',
+        const Style(stroke: HColors.coral, strokeWidth: 3.5),
+        anim: _draw.run(6, curve: Ease.inOut),
+        dashArray: 90,
+      ),
+      DrawPath(
+        'M70 170C76 164 82 174 88 168',
+        const Style(stroke: HColors.sky, strokeWidth: 3),
+        anim: _draw2.run(6, curve: Ease.inOut),
+        dashArray: 60,
+      ),
+    ], translate: const Offset(-100, -150)),
+  ], translate: const Offset(100, 150), rotate: -6),
+  Group(
+    [
+      Group([
+        const RoundRect(-4, -18, 8, 26, 1.5, Style(fill: HColors.amber)),
+        const RoundRect(-4, -22, 8, 6, 2, Style(fill: HColors.pink)),
+        _fill('M-4 8L0 16L4 8Z', _foam),
+        _fill('M-1.6 13L0 16L1.6 13Z', AvatarColors.ink),
+      ], translate: const Offset(124, 138), rotate: 40),
+      _c(119, 147, 6, AvatarColors.wing),
+    ],
+    anims: [_pencil.run(6, curve: Ease.inOut)],
+    origin: _center,
+  ),
+]);
+
+Group _stretching() => _root(
+  _stBody.run(6, curve: Ease.inOut),
+  [
+    Group([_e(34, 112, 16, 30, AvatarColors.wing, rotate: -18)], anims: [_stWl.run(6, curve: Ease.inOut)], origin: _rightMid),
+    Group([_e(166, 112, 16, 30, AvatarColors.wing, rotate: 18)], anims: [_stWr.run(6, curve: Ease.inOut)], origin: _leftMid),
+    ..._body(),
+    ..._blush(),
+    Group(
+      [_blinking(_eyes()), _stroke('M91 116 Q100 126 109 116', AvatarColors.ink, 4)],
+      anims: [_stOpen.run(6, curve: Ease.step)],
+    ),
+    Group(
+      [
+        PathShape(
+          'M64 90L86 100L64 110',
+          const Style(stroke: AvatarColors.ink, strokeWidth: 5),
+        ),
+        PathShape(
+          'M136 90L114 100L136 110',
+          const Style(stroke: AvatarColors.ink, strokeWidth: 5),
+        ),
+        _e(100, 124, 11, 14, AvatarColors.mouth),
+        _e(100, 131, 6, 4.5, AvatarColors.blush),
+      ],
+      anims: [_stShut.run(6, curve: Ease.step)],
+    ),
+  ],
+);
+
+Group _daydreaming() {
+  Node thought(double delay, List<Node> icon) =>
+      _anim(Group(icon), _cycle.run(7.5, curve: Ease.inOut, delay: delay), origin: _center);
+  return _root(
+    _thinktilt.run(5, curve: Ease.inOut),
+    [
+      ..._wings(),
+      ..._body(),
+      ..._blush(),
+      Group([
+        _blinking([
+          _e(76, 98, 9, 12, AvatarColors.ink),
+          _e(124, 98, 9, 12, AvatarColors.ink),
+          _c(80, 93, 3.5, _white),
+          _c(128, 93, 3.5, _white),
+        ]),
+      ], translate: const Offset(5, -4)),
+      _stroke('M92 117Q100 124 108 117', AvatarColors.ink, 3.5),
+    ],
+    before: [
+      Group(
+        [
+          _e(150, 32, 34, 26, _cup),
+          _c(168, 66, 5.5, _cup),
+          _c(176, 79, 3.2, _cup),
+          Group([
+            thought(0, [
+              _fill('M-10 -4H8V8Q8 12 4 12H-6Q-10 12 -10 8Z', _clay),
+              _stroke('M8 0Q15 0 15 5Q15 10 8 10', _clay, 3),
+              _stroke('M-5 -7Q-8 -12 -4 -15M2 -7Q-1 -12 3 -15', HColors.muted, 2.2),
+            ]),
+            thought(2.5, [
+              _fill(
+                'M-12 4Q-16 4 -15 -1Q-14 -5 -9 -4Q-8 -11 0 -11Q7 -11 8 -5Q14 -5 14 0Q14 4 10 4Z',
+                HColors.sky,
+              ),
+              _stroke('M-7 8L-9 13M0 8L-2 13M7 8L5 13', HColors.cyan, 2.5),
+            ]),
+            thought(5, [
+              _fill('M-13 1L14 -11L6 13L1 5Z', HColors.coral),
+              _stroke('M1 5L14 -11', _white, 1.8, opacity: 0.8),
+            ]),
+          ], translate: const Offset(150, 32), scale: 1.25),
+        ],
+        anims: [_daydrift.run(4, curve: Ease.inOut)],
+      ),
+    ],
+  );
+}
+
+Group _clockpeek() => _root(
+  _peeknod.run(8, curve: Ease.inOut),
+  [
+    ..._wings(),
+    ..._body(),
+    ..._blush(),
+    Group([_blinking(_eyes())], anims: [_peek.run(8, curve: Ease.inOut)]),
+    _stroke('M92 117Q100 124 108 117', AvatarColors.ink, 3.5),
+  ],
+  before: [
+    const Ellipse(162, 52, 24, 24, Style(fill: _clockFace, stroke: HColors.mint, strokeWidth: 5)),
+    _stroke('M162 33V37M181 52H177M162 71V67M143 52H147', AvatarColors.ink, 2.5),
+    _stroke('M162 52L154 43', AvatarColors.ink, 4),
+    Group([
+      Group([_stroke('M0 0V-15', HColors.coral, 3)], anims: [_spin.run(10, curve: Ease.linear)]),
+    ], translate: const Offset(162, 52)),
+    _c(162, 52, 3, AvatarColors.ink),
+  ],
+);
+
 final Map<AvatarState, Group> avatarScenes = {
   AvatarState.idle: _idle(),
   AvatarState.listening: _listening(),
@@ -539,4 +957,13 @@ final Map<AvatarState, Group> avatarScenes = {
   AvatarState.happy: _happy(),
   AvatarState.alarm: _alarm(),
   AvatarState.singing: _singing(),
+  AvatarState.coffee: _coffee(),
+  AvatarState.reading: _reading(),
+  AvatarState.stargazing: _stargazing(),
+  AvatarState.meditating: _meditating(),
+  AvatarState.gaming: _gaming(),
+  AvatarState.doodling: _doodling(),
+  AvatarState.stretching: _stretching(),
+  AvatarState.daydreaming: _daydreaming(),
+  AvatarState.clockpeek: _clockpeek(),
 };
