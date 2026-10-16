@@ -5,12 +5,13 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'location.dart';
 import 'weather.dart';
 
 const _refreshEvery = Duration(minutes: 30);
-const _cacheKey = 'weather.openMeteo.v1';
+const _cacheKey = 'weather.openMeteo.v2';
 
-/// Fetches Open-Meteo for [WeatherPlace]. Returns the raw JSON so it can be cached as-is.
+/// Fetches Open-Meteo for a [Place]. Returns the raw JSON so it can be cached as-is.
 class WeatherClient {
   WeatherClient([Dio? dio])
     : _dio =
@@ -25,15 +26,16 @@ class WeatherClient {
 
   final Dio _dio;
 
-  Future<Map<String, dynamic>> fetch() async {
+  Future<Map<String, dynamic>> fetch(Place place) async {
     final res = await _dio.get<Map<String, dynamic>>(
       '/v1/forecast',
       queryParameters: {
-        'latitude': WeatherPlace.latitude,
-        'longitude': WeatherPlace.longitude,
+        'latitude': place.latitude,
+        'longitude': place.longitude,
         'current': 'temperature_2m,weather_code,is_day',
-        'hourly': 'temperature_2m,weather_code,precipitation_probability,is_day',
-        'timezone': WeatherPlace.timezone,
+        'hourly':
+            'temperature_2m,weather_code,precipitation_probability,is_day',
+        'timezone': 'auto',
         'forecast_hours': 24,
       },
     );
@@ -47,9 +49,12 @@ final weatherClientProvider = Provider<WeatherClient>((ref) => WeatherClient());
 /// and keeps the last good forecast if a refresh fails.
 class WeatherNotifier extends AsyncNotifier<Weather> {
   Timer? _timer;
+  late Place _place;
 
   @override
   Future<Weather> build() async {
+    // A new place (moved, or first GPS fix) rebuilds this and refetches.
+    _place = ref.watch(placeProvider);
     _timer?.cancel();
     _timer = Timer.periodic(_refreshEvery, (_) => refresh());
     ref.onDispose(() => _timer?.cancel());
@@ -77,12 +82,19 @@ class WeatherNotifier extends AsyncNotifier<Weather> {
   }
 
   Future<Weather> _fetchAndCache() async {
-    final json = await ref.read(weatherClientProvider).fetch();
+    final json = await ref.read(weatherClientProvider).fetch(_place);
     final now = DateTime.now();
     final weather = Weather.fromOpenMeteo(json, fetchedAt: now);
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_cacheKey, jsonEncode({'at': now.toIso8601String(), 'data': json}));
+      await prefs.setString(
+        _cacheKey,
+        jsonEncode({
+          'at': now.toIso8601String(),
+          'place': _place.key,
+          'data': json,
+        }),
+      );
     } catch (_) {
       // Caching is best-effort.
     }
@@ -95,7 +107,11 @@ class WeatherNotifier extends AsyncNotifier<Weather> {
       final raw = prefs.getString(_cacheKey);
       if (raw == null) return null;
       final m = jsonDecode(raw) as Map<String, dynamic>;
-      return Weather.fromOpenMeteo(m['data'] as Map<String, dynamic>, fetchedAt: DateTime.parse(m['at'] as String));
+      if (m['place'] != _place.key) return null;
+      return Weather.fromOpenMeteo(
+        m['data'] as Map<String, dynamic>,
+        fetchedAt: DateTime.parse(m['at'] as String),
+      );
     } catch (_) {
       return null;
     }
@@ -103,4 +119,7 @@ class WeatherNotifier extends AsyncNotifier<Weather> {
 }
 
 // Retries are ours (tap to retry, 30-min refresh), not Riverpod's automatic backoff.
-final weatherProvider = AsyncNotifierProvider<WeatherNotifier, Weather>(WeatherNotifier.new, retry: (_, _) => null);
+final weatherProvider = AsyncNotifierProvider<WeatherNotifier, Weather>(
+  WeatherNotifier.new,
+  retry: (_, _) => null,
+);

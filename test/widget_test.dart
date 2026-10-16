@@ -10,6 +10,7 @@ import 'package:hermes_companion/data/hermes_client.dart';
 import 'package:hermes_companion/data/notifications/notifications_provider.dart';
 import 'package:hermes_companion/data/settings_store.dart';
 import 'package:hermes_companion/data/voice/recorder.dart';
+import 'package:hermes_companion/data/location.dart';
 import 'package:hermes_companion/data/weather_provider.dart';
 import 'package:hermes_companion/screens/home_shell.dart';
 import 'package:hermes_companion/theme/tokens.dart';
@@ -25,7 +26,7 @@ const _url = 'https://bash.example.ts.net';
 
 class _FixtureWeather extends WeatherClient {
   @override
-  Future<Map<String, dynamic>> fetch() async => openMeteoFixture();
+  Future<Map<String, dynamic>> fetch(Place place) async => openMeteoFixture();
 }
 
 /// Load the bundled fonts so overflow checks use real glyph widths, not the test font's squares.

@@ -3,10 +3,16 @@ import 'dart:math' as math;
 import 'package:flutter/widgets.dart';
 
 /// Line and fill icons ported from the inline SVGs in design/ (24x24 viewBox unless noted).
-enum HIcon { sliders, arrowRight, arrowLeft, mic, play, stop }
+enum HIcon { sliders, arrowRight, arrowLeft, mic, play, stop, refresh }
 
 class HIconView extends StatelessWidget {
-  const HIconView(this.icon, {super.key, required this.color, this.size = 22, this.strokeWidth = 2});
+  const HIconView(
+    this.icon, {
+    super.key,
+    required this.color,
+    this.size = 22,
+    this.strokeWidth = 2,
+  });
 
   final HIcon icon;
   final Color color;
@@ -14,8 +20,10 @@ class HIconView extends StatelessWidget {
   final double strokeWidth;
 
   @override
-  Widget build(BuildContext context) =>
-      CustomPaint(size: Size.square(size), painter: _IconPainter(icon, color, strokeWidth));
+  Widget build(BuildContext context) => CustomPaint(
+    size: Size.square(size),
+    painter: _IconPainter(icon, color, strokeWidth),
+  );
 }
 
 class _IconPainter extends CustomPainter {
@@ -36,7 +44,8 @@ class _IconPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
     final fill = Paint()..color = color;
 
-    void line(double x1, double y1, double x2, double y2) => canvas.drawLine(Offset(x1, y1), Offset(x2, y2), stroke);
+    void line(double x1, double y1, double x2, double y2) =>
+        canvas.drawLine(Offset(x1, y1), Offset(x2, y2), stroke);
 
     switch (icon) {
       case HIcon.sliders:
@@ -65,8 +74,17 @@ class _IconPainter extends CustomPainter {
           stroke,
         );
       case HIcon.mic:
-        canvas.drawRRect(RRect.fromLTRBR(9, 3, 15, 14, const Radius.circular(3)), stroke);
-        canvas.drawArc(const Rect.fromLTWH(5, 4, 14, 14), 0, math.pi, false, stroke);
+        canvas.drawRRect(
+          RRect.fromLTRBR(9, 3, 15, 14, const Radius.circular(3)),
+          stroke,
+        );
+        canvas.drawArc(
+          const Rect.fromLTWH(5, 4, 14, 14),
+          0,
+          math.pi,
+          false,
+          stroke,
+        );
         line(12, 18, 12, 21);
       case HIcon.play:
         canvas.drawPath(
@@ -77,11 +95,33 @@ class _IconPainter extends CustomPainter {
             ..close(),
           fill,
         );
+      case HIcon.refresh:
+        const start = -math.pi / 2 + 0.6, sweep = math.pi * 1.6, r = 7.0;
+        canvas.drawArc(
+          const Rect.fromLTWH(5, 5, 14, 14),
+          start,
+          sweep,
+          false,
+          stroke,
+        );
+        final end = start + sweep;
+        final tip = Offset(12 + r * math.cos(end), 12 + r * math.sin(end));
+        final back = Offset(
+          math.sin(end),
+          -math.cos(end),
+        ); // against the clockwise tangent
+        final out = Offset(math.cos(end), math.sin(end));
+        canvas.drawLine(tip, tip + back * 4.5 + out * 3, stroke);
+        canvas.drawLine(tip, tip + back * 4.5 - out * 3, stroke);
       case HIcon.stop:
-        canvas.drawRRect(RRect.fromLTRBR(5, 5, 19, 19, const Radius.circular(3)), fill);
+        canvas.drawRRect(
+          RRect.fromLTRBR(5, 5, 19, 19, const Radius.circular(3)),
+          fill,
+        );
     }
   }
 
   @override
-  bool shouldRepaint(_IconPainter old) => old.icon != icon || old.color != color;
+  bool shouldRepaint(_IconPainter old) =>
+      old.icon != icon || old.color != color;
 }

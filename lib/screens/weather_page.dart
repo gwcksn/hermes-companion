@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../data/location.dart';
 import '../data/weather.dart';
 import '../data/weather_provider.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
 import '../widgets/weather_icons.dart';
 
-/// Weather page: Open-Meteo for Yogyakarta, °C, refreshed every 30 minutes.
+/// Weather page: Open-Meteo for the device's current location, °C, refreshed every 30 minutes.
 class WeatherPage extends ConsumerWidget {
   const WeatherPage({super.key});
 
@@ -15,7 +16,10 @@ class WeatherPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final weather = ref.watch(weatherProvider);
     return switch (weather) {
-      AsyncData(:final value) => _Forecast(value),
+      AsyncData(:final value) => _Forecast(
+        value,
+        ref.watch(placeProvider).name,
+      ),
       AsyncError() => _Message(
         title: 'Weather unavailable',
         detail: 'Tap to try again',
@@ -27,9 +31,10 @@ class WeatherPage extends ConsumerWidget {
 }
 
 class _Forecast extends StatelessWidget {
-  const _Forecast(this.w);
+  const _Forecast(this.w, this.place);
 
   final Weather w;
+  final String place;
 
   @override
   Widget build(BuildContext context) {
@@ -43,18 +48,32 @@ class _Forecast extends StatelessWidget {
         children: [
           Row(
             children: [
-              WeatherIcon(w.now.kind, size: 92, large: true, night: !w.now.isDay),
+              WeatherIcon(
+                w.now.kind,
+                size: 92,
+                large: true,
+                night: !w.now.isDay,
+              ),
               const SizedBox(width: 18),
-              Text('${w.now.temp.round()}°', style: hDisplay(84, weight: FontWeight.w600, height: 1)),
+              Text(
+                '${w.now.temp.round()}°',
+                style: hDisplay(84, weight: FontWeight.w600, height: 1),
+              ),
               const SizedBox(width: 18),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(w.condition, style: hText(20)),
                   const SizedBox(height: 2),
-                  Text(WeatherPlace.name, style: hText(13, color: HColors.muted)),
+                  Text(place, style: hText(13, color: HColors.muted)),
                   const SizedBox(height: 2),
-                  Text(w.hint, style: hText(13, color: rainy ? HColors.mint : HColors.muted)),
+                  Text(
+                    w.hint,
+                    style: hText(
+                      13,
+                      color: rainy ? HColors.mint : HColors.muted,
+                    ),
+                  ),
                 ],
               ),
             ],
@@ -83,7 +102,8 @@ class _Slot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Semantics(
-      label: '${slot.label}, ${conditionFor(slot.code)}, ${slot.temp.round()} degrees',
+      label:
+          '${slot.label}, ${conditionFor(slot.code)}, ${slot.temp.round()} degrees',
       excludeSemantics: true,
       child: Container(
         width: 76,
@@ -95,7 +115,10 @@ class _Slot extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text(slot.label, style: hText(13, color: current ? HColors.text : HColors.muted)),
+            Text(
+              slot.label,
+              style: hText(13, color: current ? HColors.text : HColors.muted),
+            ),
             const SizedBox(height: 6),
             WeatherIcon(slot.kind, night: !slot.isDay),
             const SizedBox(height: 6),
@@ -124,7 +147,10 @@ class _Message extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(title, style: hText(20)),
-            if (detail != null) ...[const SizedBox(height: 6), Text(detail!, style: hText(13, color: HColors.muted))],
+            if (detail != null) ...[
+              const SizedBox(height: 6),
+              Text(detail!, style: hText(13, color: HColors.muted)),
+            ],
           ],
         ),
       ),
