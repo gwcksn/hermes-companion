@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Setup, step 1</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600&family=Nunito:wght@400;600;700&display=swap">
+<style>
+body{margin:0}
+a{text-decoration:none}
+input::placeholder{color:#8C879A}
+input:focus{outline:2px solid #8FE3C0;outline-offset:2px}
+a:focus-visible{outline:2px solid #8FE3C0;outline-offset:2px}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}96%{transform:scaleY(0.1)}}
+@keyframes look{0%,30%,100%{transform:translateX(0)}38%,55%{transform:translateX(-4px)}63%,80%{transform:translateX(4px)}}
+.bob{animation:bob 3.4s ease-in-out infinite}
+.blink{transform-box:fill-box;transform-origin:center;animation:blink 5s infinite}
+.look{transform-box:fill-box;transform-origin:center;animation:look 9s ease-in-out infinite}
+@media (prefers-reduced-motion:reduce){.bob,.blink,.look{animation:none}}
+</style>
+</helmet>
+<div style="width: 740px; height: 360px; box-sizing: border-box; display: flex; overflow: hidden; background: #0B0A10; font-family: 'Nunito', system-ui, sans-serif; color: #F4F0EA">
+
+<div style="width: 268px; height: 360px; flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: radial-gradient(circle at 50% 52%, #2A2538 0%, #0B0A10 72%)">
+<svg viewBox="0 0 200 200" width="170" height="170" role="img" aria-label="Hermes avatar, idle" style="display: block">
+<ellipse cx="100" cy="186" rx="52" ry="7" fill="#000000" opacity="0.4"></ellipse>
+<g class="bob">
+<ellipse cx="34" cy="112" rx="16" ry="30" fill="#FFE9C7" transform="rotate(-18 34 112)"></ellipse>
+<ellipse cx="166" cy="112" rx="16" ry="30" fill="#FFE9C7" transform="rotate(18 166 112)"></ellipse>
+<ellipse cx="100" cy="108" rx="68" ry="66" fill="#FFD6A5"></ellipse>
+<ellipse cx="100" cy="134" rx="40" ry="28" fill="#FFEBD0"></ellipse>
+<path d="M88 44 Q92 28 100 36 Q108 28 112 44" fill="none" stroke="#FFB87A" stroke-width="6" stroke-linecap="round"></path>
+<ellipse cx="57" cy="118" rx="10" ry="6" fill="#FF9AA2" opacity="0.65"></ellipse>
+<ellipse cx="143" cy="118" rx="10" ry="6" fill="#FF9AA2" opacity="0.65"></ellipse>
+<g class="look"><g class="blink">
+<ellipse cx="76" cy="98" rx="9" ry="12" fill="#2B2233"></ellipse>
+<ellipse cx="124" cy="98" rx="9" ry="12" fill="#2B2233"></ellipse>
+<circle cx="79" cy="93" r="3.5" fill="#FFFFFF"></circle>
+<circle cx="127" cy="93" r="3.5" fill="#FFFFFF"></circle>
+</g></g>
+<path d="M91 116 Q100 126 109 116" fill="none" stroke="#2B2233" stroke-width="4" stroke-linecap="round"></path>
+</g>
+</svg>
+<div style="font-family: 'Fredoka', sans-serif; font-weight: 500; font-size: 20px; color: #F4F0EA">Hermes</div>
+<div style="font-size: 13px; font-weight: 700; color: #A9A5B5">Let's connect</div>
+</div>
+
+<div style="flex: 1; min-width: 0; height: 336px; margin: 12px 12px 12px 0; box-sizing: border-box; padding: 0 20px 12px 20px; display: flex; flex-direction: column; gap: 10px; background: #14131A; border-radius: 24px">
+
+<div style="height: 44px; flex: none; display: flex; align-items: center; justify-content: space-between">
+<div style="font-size: 13px; font-weight: 700; color: #A9A5B5">Step 1 of 3</div>
+<div style="display: flex; align-items: center; gap: 6px">
+<div style="width: 22px; height: 8px; border-radius: 4px; background: #FFD6A5"></div>
+<div style="width: 8px; height: 8px; border-radius: 4px; background: #4A4658"></div>
+<div style="width: 8px; height: 8px; border-radius: 4px; background: #4A4658"></div>
+</div>
+</div>
+
+<div style="font-family: 'Fredoka', sans-serif; font-weight: 500; font-size: 26px; line-height: 1.2; color: #F4F0EA">Find your Hermes</div>
+<div style="font-size: 15px; font-weight: 600; line-height: 1.45; color: #C9C5D3">Type the address you use to open the Hermes dashboard in a browser. No port number needed.</div>
+
+<div>
+<label for="addr" style="display: block; margin-bottom: 4px; font-size: 13px; font-weight: 700; color: #A9A5B5">Hermes address</label>
+<input id="addr" type="text" value="https://your-hermes.ts.net/" style="width: 100%; height: 44px; box-sizing: border-box; padding: 0 14px; border: none; border-radius: 14px; background: #1F1D29; color: #F4F0EA; font-family: 'Nunito', system-ui, sans-serif; font-size: 15px; font-weight: 600">
+</div>
+
+<div style="display: flex; align-items: center; gap: 8px">
+<div style="width: 8px; height: 8px; border-radius: 4px; background: #8FE3C0"></div>
+<div style="font-size: 13px; font-weight: 700; color: #8FE3C0">Reachable. Hermes 0.21.6, gateway running</div>
+</div>
+
+<div style="flex: 1"></div>
+
+<div style="height: 48px; flex: none; display: flex; justify-content: flex-end">
+<a href="Setup2.dc.html" style="height: 48px; padding: 0 32px; box-sizing: border-box; border-radius: 24px; background: #FFD6A5; color: #2B2233; font-size: 15px; font-weight: 700; display: flex; align-items: center">Next</a>
+</div>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":740,"height":360}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
