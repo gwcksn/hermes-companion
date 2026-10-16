@@ -111,3 +111,7 @@ Ignored by the companion: skin, pet, preview, browser, terminal, cron, moa, voic
 
 - `POST /api/audio/transcribe` with `{data_url, mime_type}` (speech to text). Verified live: wav, mp4/m4a, webm and ogg all work; answers `{ok, transcript, provider: "local"}`. The first call took ~40 s (model load), later ones ~8 s, so use a long receive timeout (the app uses 90 s).
 - `POST /api/audio/speak` with `{text}` returns a base64 audio data URL (text to speech).
+
+## New session (`/new`)
+
+The dashboard gateway has no reset or slash-command RPC (`tui_gateway/contracts/sessions.py`, v0.21.6). The companion handles `/new` and `/reset [title]` client-side: it drops the stored session id, calls `session.close` on the live session (best effort), then `session.create`. The old session stays in Hermes history. The refresh button in the chat page does the same.

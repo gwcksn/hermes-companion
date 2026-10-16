@@ -81,6 +81,8 @@ class FakeGatewayConnection implements GatewayTransport {
         }
       case 'prompt.submit':
         result = {'status': 'streaming'};
+      case 'session.close':
+        result = {'closed': true};
       case 'session.interrupt':
         result = {'status': 'interrupted'};
       default:
