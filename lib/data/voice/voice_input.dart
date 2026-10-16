@@ -39,7 +39,8 @@ class VoiceState {
 
 /// One voice capture: record, then transcribe on [finish]. Scoped to the listening screen.
 class VoiceInput extends Notifier<VoiceState> {
-  late final Recorder _recorder = ref.read(recorderFactoryProvider)();
+  Recorder? _created;
+  Recorder get _recorder => _created ??= ref.read(recorderFactoryProvider)();
   Timer? _clock;
   StreamSubscription<double>? _levels;
   var _elapsed = Duration.zero;
@@ -51,8 +52,9 @@ class VoiceInput extends Notifier<VoiceState> {
       _closed = true;
       _clock?.cancel();
       _levels?.cancel();
-      _recorder.cancel().catchError((_) {});
-      _recorder.dispose().catchError((_) {});
+      // Never touch `_recorder` here: building it reads a provider, which is not allowed in dispose.
+      _created?.cancel().catchError((_) {});
+      _created?.dispose().catchError((_) {});
     });
     return const VoiceState();
   }
@@ -97,6 +99,7 @@ class VoiceInput extends Notifier<VoiceState> {
       if (client == null) return _fail('Not connected to Hermes.');
       final text = await transcribeAudio(client, bytes, mimeType: _recorder.mimeType);
       if (text.isEmpty) return _fail("I didn't catch that. Try again.");
+      if (!_closed) state = const VoiceState(); // done: the next press starts fresh
       return text;
     } on HermesError catch (e) {
       return _fail(e.message);

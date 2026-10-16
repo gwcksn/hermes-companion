@@ -10,6 +10,7 @@ import '../../avatar/avatar_state.dart';
 import '../../avatar/reactions.dart';
 import '../hermes_client.dart';
 import '../settings_store.dart';
+import '../voice/reply_speaker.dart';
 import 'gateway_socket.dart';
 
 enum ChatRole { user, hermes, note }
@@ -111,6 +112,8 @@ class ChatController extends Notifier<ChatState> {
 
   HermesClient? get _client => ref.read(hermesClientProvider);
   String get _profile => ref.read(settingsProvider).profile;
+  bool get _speakAloud => ref.read(settingsProvider).readAloud;
+
   String get _sessionKey => 'chat.session.${ref.read(settingsProvider).serverUrl}|$_profile';
 
   @override
@@ -337,7 +340,8 @@ class ChatController extends Notifier<ChatState> {
         _ensureStreamingBubble();
         _updateLast((m) => m.copyWith(text: m.text + text));
         state = state.copyWith(activity: () => null);
-        _avatar(AvatarState.speaking);
+        // With voice on, the avatar speaks when the audio does (ReplySpeaker), not as text streams.
+        _avatar(_speakAloud ? AvatarState.thinking : AvatarState.speaking);
       case 'message.interim':
         final text = e.payload['text'] as String? ?? '';
         if (text.isEmpty || e.payload['already_streamed'] == true) return;
@@ -357,15 +361,24 @@ class ChatController extends Notifier<ChatState> {
     final text = p['text'];
     final status = p['status'] as String? ?? 'complete';
     final last = state.messages.lastOrNull;
+    String? reply; // this turn's final text, for reading aloud
     if (last != null && last.role == ChatRole.hermes && last.streaming) {
       _updateLast(
         (m) =>
             m.copyWith(text: text is String && text.trim().isNotEmpty ? text.trim() : m.text.trim(), streaming: false),
       );
       final done = state.messages.last.text;
-      if (done.isEmpty) state = state.copyWith(messages: [...state.messages]..removeLast());
+      if (done.isEmpty) {
+        state = state.copyWith(messages: [...state.messages]..removeLast());
+      } else {
+        reply = done;
+      }
     } else if (text is String && text.trim().isNotEmpty) {
       _append(ChatMessage(ChatRole.hermes, text.trim()));
+      reply = text.trim();
+    }
+    if (status == 'complete' && reply != null && _speakAloud) {
+      unawaited(ref.read(replySpeakerProvider.notifier).speak(reply));
     }
     switch (status) {
       case 'error':
@@ -392,7 +405,10 @@ class ChatController extends Notifier<ChatState> {
   void _settleToIdle() {
     _settle?.cancel();
     _settle = Timer(const Duration(seconds: 3), () {
-      if (!_disposed && !state.busy) _avatar(AvatarState.idle);
+      if (_disposed || state.busy) return;
+      // A reply being read aloud owns the avatar until its audio ends.
+      if (ref.read(replySpeakerProvider) == SpeakerPhase.playing) return;
+      _avatar(AvatarState.idle);
     });
   }
 

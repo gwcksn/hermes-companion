@@ -31,6 +31,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   late final _profile = TextEditingController(text: _initial.profile);
   late bool _keepOn = _initial.keepScreenOn;
   late bool _dim = _initial.dimAtNight;
+  late bool _readAloud = _initial.readAloud;
   List<String> _profiles = const [];
   bool _busy = false;
 
@@ -116,7 +117,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final notifier = ref.read(settingsProvider.notifier);
     final next = ref
         .read(settingsProvider)
-        .copyWith(serverUrl: url, profile: _profile.text, keepScreenOn: _keepOn, dimAtNight: _dim);
+        .copyWith(serverUrl: url, profile: _profile.text, keepScreenOn: _keepOn, dimAtNight: _dim, readAloud: _readAloud);
     if (url != _initial.serverUrl) {
       // New server: its login differs, so walk through setup again.
       await ref.read(credentialStoreProvider).clear();
@@ -219,6 +220,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             onChanged: (v) => setState(() => _dim = v),
                           ),
                         ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: SwitchPill(
+                            label: 'Read replies aloud',
+                            value: _readAloud,
+                            onChanged: (v) => setState(() => _readAloud = v),
+                          ),
+                        ),
+                        const Spacer(),
                       ],
                     ),
                     const SizedBox(height: 10),
