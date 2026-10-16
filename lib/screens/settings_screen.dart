@@ -42,11 +42,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 
   Future<void> _loadAccount() async {
-    final creds = await ref.read(credentialStoreProvider).read(_initial.serverUrl);
-    if (mounted) _account.text = creds == null ? 'Signed out' : 'Signed in as ${creds.username}';
+    final creds = await ref
+        .read(credentialStoreProvider)
+        .read(_initial.serverUrl);
+    if (mounted)
+      _account.text = creds == null
+          ? 'Signed out'
+          : 'Signed in as ${creds.username}';
     try {
       final status = await ref.read(hermesClientProvider)?.status();
-      if (mounted && status != null) setState(() => _profiles = status.profiles);
+      if (mounted && status != null)
+        setState(() => _profiles = status.profiles);
     } on HermesError {
       // Profile list stays as-is; the field still shows the saved profile.
     }
@@ -67,7 +73,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         SnackBar(
           behavior: SnackBarBehavior.floating,
           backgroundColor: HColors.surfaceActive,
-          content: Text(text, style: hText(14, color: error ? HColors.coral : HColors.mint)),
+          content: Text(
+            text,
+            style: hText(14, color: error ? HColors.coral : HColors.mint),
+          ),
         ),
       );
   }
@@ -93,7 +102,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _test() async {
     final url = normalizeServerUrl(_url.text);
-    if (url == null) return _toast(const HermesError(HermesErrorKind.invalidUrl).message, error: true);
+    if (url == null)
+      return _toast(
+        const HermesError(HermesErrorKind.invalidUrl).message,
+        error: true,
+      );
     setState(() => _busy = true);
     try {
       final client = ref.read(hermesClientFactoryProvider)(url);
@@ -102,7 +115,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         _toast('${status.summary}. Save to sign in to it');
       } else {
         final model = await client.modelName(_profile.text);
-        _toast('Connected to ${_profile.text}${model == null ? '' : ', model $model'}');
+        _toast(
+          'Connected to ${_profile.text}${model == null ? '' : ', model $model'}',
+        );
       }
     } on HermesError catch (e) {
       _toast(e.message, error: true);
@@ -113,16 +128,28 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   Future<void> _save() async {
     final url = normalizeServerUrl(_url.text);
-    if (url == null) return _toast(const HermesError(HermesErrorKind.invalidUrl).message, error: true);
+    if (url == null)
+      return _toast(
+        const HermesError(HermesErrorKind.invalidUrl).message,
+        error: true,
+      );
     final notifier = ref.read(settingsProvider.notifier);
     final next = ref
         .read(settingsProvider)
-        .copyWith(serverUrl: url, profile: _profile.text, keepScreenOn: _keepOn, dimAtNight: _dim, readAloud: _readAloud);
+        .copyWith(
+          serverUrl: url,
+          profile: _profile.text,
+          keepScreenOn: _keepOn,
+          dimAtNight: _dim,
+          readAloud: _readAloud,
+        );
     if (url != _initial.serverUrl) {
       // New server: its login differs, so walk through setup again.
       await ref.read(credentialStoreProvider).clear();
       await notifier.update(next.copyWith(setupComplete: false));
-      if (mounted) await Navigator.of(context).pushAndRemoveUntil(fadeRoute(const Setup1Server()), (_) => false);
+      if (mounted)
+        await Navigator.of(context)
+            .pushAndRemoveUntil(fadeRoute(const Setup1Server()), (_) => false);
       return;
     }
     await notifier.update(next);
@@ -154,8 +181,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     if (yes != true) return;
     await ref.read(credentialStoreProvider).clear();
-    await ref.read(settingsProvider.notifier).update(ref.read(settingsProvider).copyWith(setupComplete: false));
-    if (mounted) await Navigator.of(context).pushAndRemoveUntil(fadeRoute(const Setup1Server()), (_) => false);
+    await ref
+        .read(settingsProvider.notifier)
+        .update(ref.read(settingsProvider).copyWith(setupComplete: false));
+    if (mounted)
+      await Navigator.of(context)
+          .pushAndRemoveUntil(fadeRoute(const Setup1Server()), (_) => false);
   }
 
   @override
@@ -171,7 +202,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             height: 44,
             child: Row(
               children: [
-                IconTap(icon: HIcon.arrowLeft, color: HColors.text, semanticLabel: 'Back to chat', onPressed: back),
+                IconTap(
+                  icon: HIcon.arrowLeft,
+                  color: HColors.text,
+                  semanticLabel: 'Back to chat',
+                  onPressed: back,
+                ),
                 const SizedBox(width: 4),
                 Text('Connection', style: hDisplay(20)),
               ],
@@ -184,12 +220,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 padding: const EdgeInsets.only(left: 12),
                 child: Column(
                   children: [
-                    LabeledField(label: 'Server URL', controller: _url, keyboardType: TextInputType.url),
+                    LabeledField(
+                      label: 'Server URL',
+                      controller: _url,
+                      keyboardType: TextInputType.url,
+                    ),
                     const SizedBox(height: 10),
                     Row(
                       children: [
                         Expanded(
-                          child: LabeledField(label: 'Account', controller: _account, readOnly: true, onTap: _signOut),
+                          child: LabeledField(
+                            label: 'Account',
+                            controller: _account,
+                            readOnly: true,
+                            onTap: _signOut,
+                          ),
                         ),
                         const SizedBox(width: 10),
                         Expanded(
@@ -245,7 +290,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             expand: true,
                             onPressed: () async {
                               try {
-                                await ref.read(notificationsBridgeProvider).openSettings();
+                                await ref
+                                    .read(notificationsBridgeProvider)
+                                    .openSettings();
                               } catch (_) {}
                             },
                           ),
@@ -268,15 +315,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                           child: Builder(
                             builder: (_) {
                               final ws = ref.watch(workspaceProvider);
-                              final connected = !(ws is AsyncError && ws.error is GoogleSignedOut);
+                              final connected =
+                                  !(ws is AsyncError &&
+                                      ws.error is GoogleSignedOut);
                               return PillButton(
-                                connected ? 'Disconnect Google' : 'Connect Google',
+                                connected
+                                    ? 'Disconnect Google'
+                                    : 'Connect Google',
                                 style: PillStyle.secondaryMint,
                                 expand: true,
                                 onPressed: () async {
-                                  final n = ref.read(workspaceProvider.notifier);
+                                  final n = ref.read(
+                                    workspaceProvider.notifier,
+                                  );
                                   try {
-                                    await (connected ? n.disconnect() : n.connect());
+                                    await (connected
+                                        ? n.disconnect()
+                                        : n.connect());
                                   } catch (_) {}
                                 },
                               );
@@ -287,7 +342,15 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                     const SizedBox(height: 10),
                     Row(
-                      children: [Expanded(child: PillButton('Save and connect', expand: true, onPressed: _save))],
+                      children: [
+                        Expanded(
+                          child: PillButton(
+                            'Save and connect',
+                            expand: true,
+                            onPressed: _save,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

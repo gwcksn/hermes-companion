@@ -7,7 +7,12 @@ Map<String, dynamic> openMeteoFixture({
   List<int> codes = const [2, 3, 3, 61, 63, 3],
 }) => {
   'timezone': 'Asia/Jakarta',
-  'current': {'time': '2026-10-16T17:15', 'temperature_2m': currentTemp, 'weather_code': currentCode, 'is_day': isDay},
+  'current': {
+    'time': '2026-10-16T17:15',
+    'temperature_2m': currentTemp,
+    'weather_code': currentCode,
+    'is_day': isDay,
+  },
   'hourly': {
     'time': [
       '2026-10-16T17:00', '2026-10-16T18:00', '2026-10-16T19:00', //

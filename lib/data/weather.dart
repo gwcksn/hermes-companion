@@ -1,16 +1,13 @@
 // Weather model parsed from Open-Meteo's /v1/forecast (free, no key).
 import '../widgets/weather_icons.dart';
 
-/// Yogyakarta, °C, times in WIB (Open-Meteo returns local times for timezone=Asia/Jakarta).
-abstract final class WeatherPlace {
-  static const name = 'Yogyakarta';
-  static const latitude = -7.80;
-  static const longitude = 110.36;
-  static const timezone = 'Asia/Jakarta';
-}
-
 class WeatherSlot {
-  const WeatherSlot({required this.label, required this.code, required this.temp, required this.isDay});
+  const WeatherSlot({
+    required this.label,
+    required this.code,
+    required this.temp,
+    required this.isDay,
+  });
 
   final String label;
   final int code;
@@ -21,7 +18,12 @@ class WeatherSlot {
 }
 
 class Weather {
-  const Weather({required this.now, required this.hours, required this.hint, required this.fetchedAt});
+  const Weather({
+    required this.now,
+    required this.hours,
+    required this.hint,
+    required this.fetchedAt,
+  });
 
   /// Current conditions ("Now" slot and the large readout).
   final WeatherSlot now;
@@ -36,19 +38,35 @@ class Weather {
 
   String get condition => conditionFor(now.code);
 
-  static Weather fromOpenMeteo(Map<String, dynamic> json, {required DateTime fetchedAt}) {
+  static Weather fromOpenMeteo(
+    Map<String, dynamic> json, {
+    required DateTime fetchedAt,
+  }) {
     final current = json['current'] as Map<String, dynamic>;
     final hourly = json['hourly'] as Map<String, dynamic>;
     final times = (hourly['time'] as List).cast<String>();
-    final temps = (hourly['temperature_2m'] as List).map((v) => (v as num).toDouble()).toList();
-    final codes = (hourly['weather_code'] as List).map((v) => (v as num).toInt()).toList();
-    final days = (hourly['is_day'] as List).map((v) => (v as num) == 1).toList();
-    final rain = (hourly['precipitation_probability'] as List).map((v) => (v as num?)?.toInt() ?? 0).toList();
+    final temps = (hourly['temperature_2m'] as List)
+        .map((v) => (v as num).toDouble())
+        .toList();
+    final codes = (hourly['weather_code'] as List)
+        .map((v) => (v as num).toInt())
+        .toList();
+    final days = (hourly['is_day'] as List)
+        .map((v) => (v as num) == 1)
+        .toList();
+    final rain = (hourly['precipitation_probability'] as List)
+        .map((v) => (v as num?)?.toInt() ?? 0)
+        .toList();
 
     // hourly[0] is the current hour; slots are the 4 after it.
     final hours = [
       for (var i = 1; i <= 4 && i < times.length; i++)
-        WeatherSlot(label: times[i].substring(11, 16), code: codes[i], temp: temps[i], isDay: days[i]),
+        WeatherSlot(
+          label: times[i].substring(11, 16),
+          code: codes[i],
+          temp: temps[i],
+          isDay: days[i],
+        ),
     ];
 
     return Weather(
@@ -109,7 +127,9 @@ String rainHint(List<String> times, List<int> rainChance, List<int> codes) {
       return '$what likely ${_period(hour, sameDay)}';
     }
   }
-  final peak = rainChance.isEmpty ? 0 : rainChance.reduce((a, b) => a > b ? a : b);
+  final peak = rainChance.isEmpty
+      ? 0
+      : rainChance.reduce((a, b) => a > b ? a : b);
   return peak >= 20 ? 'Small chance of rain' : 'No rain expected';
 }
 

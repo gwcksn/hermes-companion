@@ -29,11 +29,15 @@ class _HermesAppState extends ConsumerState<HermesApp> {
     _applyKeepOn(ref.read(settingsProvider).keepScreenOn);
   }
 
-  void _applyKeepOn(bool on) => (on ? WakelockPlus.enable() : WakelockPlus.disable()).catchError((_) {});
+  void _applyKeepOn(bool on) =>
+      (on ? WakelockPlus.enable() : WakelockPlus.disable()).catchError((_) {});
 
   @override
   Widget build(BuildContext context) {
-    ref.listen(settingsProvider.select((s) => s.keepScreenOn), (_, on) => _applyKeepOn(on));
+    ref.listen(
+      settingsProvider.select((s) => s.keepScreenOn),
+      (_, on) => _applyKeepOn(on),
+    );
     return MaterialApp(
       title: 'Hermes Companion',
       debugShowCheckedModeBanner: false,
@@ -42,7 +46,10 @@ class _HermesAppState extends ConsumerState<HermesApp> {
       builder: (context, child) {
         final mq = MediaQuery.of(context);
         final d = HSizes.designFor(mq.size);
-        final scale = math.min(mq.size.width / d.width, mq.size.height / d.height);
+        final scale = math.min(
+          mq.size.width / d.width,
+          mq.size.height / d.height,
+        );
         return AmbientOverlay(
           child: ScaledStage(
             size: d,

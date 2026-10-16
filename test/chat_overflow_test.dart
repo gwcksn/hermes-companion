@@ -9,6 +9,7 @@ import 'package:hermes_companion/data/auth/credential_store.dart';
 import 'package:hermes_companion/data/gateway/chat_controller.dart';
 import 'package:hermes_companion/data/hermes_client.dart';
 import 'package:hermes_companion/data/settings_store.dart';
+import 'package:hermes_companion/data/location.dart';
 import 'package:hermes_companion/data/weather_provider.dart';
 import 'package:hermes_companion/screens/home_shell.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -21,7 +22,7 @@ const _url = 'https://bash.example.ts.net';
 
 class _FixtureWeather extends WeatherClient {
   @override
-  Future<Map<String, dynamic>> fetch() async => openMeteoFixture();
+  Future<Map<String, dynamic>> fetch(Place place) async => openMeteoFixture();
 }
 
 Future<void> _loadFonts() async {
