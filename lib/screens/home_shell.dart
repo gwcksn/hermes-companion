@@ -5,6 +5,7 @@ import '../avatar/avatar_controller.dart';
 import '../avatar/avatar_state.dart';
 import '../data/connection.dart';
 import '../data/gateway/chat_controller.dart';
+import '../data/settings_store.dart';
 import '../layout/ambient.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
@@ -27,6 +28,7 @@ class HomeShell extends ConsumerStatefulWidget {
 
 class _HomeShellState extends ConsumerState<HomeShell> {
   final _pages = PageController();
+  final _panelKey = GlobalKey();
   int _page = 0;
 
   static const _labels = ['Chat page', 'Clock page', 'Weather page', 'Notifications page', 'Google page'];
@@ -55,18 +57,29 @@ class _HomeShellState extends ConsumerState<HomeShell> {
     // A lost link shows on the avatar too.
     final state = link.state == LinkState.offline ? AvatarState.oops : ref.watch(avatarProvider);
     final chatPhase = ref.watch(chatProvider.select((c) => c.phase));
-    final disconnected = link.state == LinkState.offline || chatPhase == ChatPhase.offline;
+    final disconnected =
+        link.state == LinkState.offline || chatPhase == ChatPhase.offline;
+    final settings = ref.watch(settingsProvider);
+    final fullscreen = settings.fullscreenPanel;
+    void reconnect() {
+      ref.read(connectionProvider.notifier).check();
+      ref.read(chatProvider.notifier).connect();
+    }
+
     return ScreenFrame(
+      panelKey: _panelKey,
+      fullscreen: fullscreen,
+      avatarPos: settings.avatarPosX == null || settings.avatarPosY == null
+          ? null
+          : Offset(settings.avatarPosX!, settings.avatarPosY!),
+      onAvatarMoved: ref.read(settingsProvider.notifier).setAvatarPos,
       state: state,
       onAvatarTap: ref.read(ambientProvider.notifier).petAvatar,
       stageAction: disconnected
           ? PillButton(
               'Reconnect',
               style: PillStyle.secondary,
-              onPressed: () {
-                ref.read(connectionProvider.notifier).check();
-                ref.read(chatProvider.notifier).connect();
-              },
+              onPressed: reconnect,
             )
           : null,
       panelPadding: EdgeInsets.zero,
@@ -102,6 +115,21 @@ class _HomeShellState extends ConsumerState<HomeShell> {
                       ),
                     ),
                   const SizedBox(width: 4),
+                  if (fullscreen && disconnected)
+                    IconTap(
+                      icon: HIcon.refresh,
+                      semanticLabel: 'Reconnect',
+                      onPressed: reconnect,
+                    ),
+                  IconTap(
+                    icon: fullscreen ? HIcon.collapse : HIcon.expand,
+                    semanticLabel: fullscreen
+                        ? 'Exit fullscreen'
+                        : 'Fullscreen panel',
+                    onPressed: () => ref
+                        .read(settingsProvider.notifier)
+                        .setFullscreen(!fullscreen),
+                  ),
                   IconTap(
                     icon: HIcon.sliders,
                     semanticLabel: 'Connection settings',

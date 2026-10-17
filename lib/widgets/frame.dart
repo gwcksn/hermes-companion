@@ -7,6 +7,7 @@ import '../screens/avatar_gallery.dart';
 import '../screens/markdown_gallery.dart';
 import '../theme/tokens.dart';
 import 'common.dart';
+import 'floating_avatar.dart';
 
 /// Every screen: 268dp avatar stage on the left, rounded panel on the right.
 /// In portrait the stage is on top and the panel below.
@@ -21,6 +22,10 @@ class ScreenFrame extends StatelessWidget {
     this.stageAction,
     this.onAvatarTap,
     this.panelPadding = const EdgeInsets.fromLTRB(20, 0, 16, 12),
+    this.panelKey,
+    this.fullscreen = false,
+    this.avatarPos,
+    this.onAvatarMoved,
   });
 
   final AvatarState state;
@@ -38,6 +43,14 @@ class ScreenFrame extends StatelessWidget {
   final VoidCallback? onAvatarTap;
   final EdgeInsets panelPadding;
 
+  /// Keeps the panel's state when toggling [fullscreen] reparents it.
+  final GlobalKey? panelKey;
+
+  /// Panel fills the screen; the avatar floats over it at [avatarPos] (0..1 fractions).
+  final bool fullscreen;
+  final Offset? avatarPos;
+  final void Function(double fx, double fy)? onAvatarMoved;
+
   @override
   Widget build(BuildContext context) {
     final portrait = MediaQuery.sizeOf(context).height > MediaQuery.sizeOf(context).width;
@@ -51,13 +64,45 @@ class ScreenFrame extends StatelessWidget {
       portrait: portrait,
     );
     final panelBox = Container(
-      margin: portrait
-          ? const EdgeInsets.fromLTRB(HSizes.panelMargin, 0, HSizes.panelMargin, HSizes.panelMargin)
-          : const EdgeInsets.fromLTRB(0, HSizes.panelMargin, HSizes.panelMargin, HSizes.panelMargin),
+      key: panelKey,
+      margin: fullscreen
+          ? const EdgeInsets.all(8)
+          : portrait
+          ? const EdgeInsets.fromLTRB(
+              HSizes.panelMargin,
+              0,
+              HSizes.panelMargin,
+              HSizes.panelMargin,
+            )
+          : const EdgeInsets.fromLTRB(
+              0,
+              HSizes.panelMargin,
+              HSizes.panelMargin,
+              HSizes.panelMargin,
+            ),
       padding: panelPadding,
       decoration: BoxDecoration(color: HColors.panel, borderRadius: BorderRadius.circular(HRadii.panel)),
       child: panel,
     );
+    if (fullscreen) {
+      return Scaffold(
+        backgroundColor: HColors.bg,
+        body: Stack(
+          children: [
+            Positioned.fill(child: panelBox),
+            Positioned.fill(
+              child: FloatingAvatar(
+                state: state,
+                fx: avatarPos?.dx ?? 1,
+                fy: avatarPos?.dy ?? 0.5,
+                onTap: onAvatarTap,
+                onMoved: onAvatarMoved ?? (_, _) {},
+              ),
+            ),
+          ],
+        ),
+      );
+    }
     return Scaffold(
       backgroundColor: HColors.bg,
       // Stretch so the stage glow fills the full height (landscape) or width (portrait).

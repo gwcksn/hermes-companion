@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/widgets.dart';
 
 /// Line and fill icons ported from the inline SVGs in design/ (24x24 viewBox unless noted).
-enum HIcon { sliders, arrowRight, arrowLeft, mic, play, stop, refresh }
+enum HIcon { sliders, arrowRight, arrowLeft, mic, play, stop, refresh, expand, collapse }
 
 class HIconView extends StatelessWidget {
   const HIconView(
@@ -113,6 +113,26 @@ class _IconPainter extends CustomPainter {
         final out = Offset(math.cos(end), math.sin(end));
         canvas.drawLine(tip, tip + back * 4.5 + out * 3, stroke);
         canvas.drawLine(tip, tip + back * 4.5 - out * 3, stroke);
+      case HIcon.expand:
+        for (final (x, y, dx, dy) in const [
+          (4.0, 4.0, 1.0, 1.0),
+          (20.0, 4.0, -1.0, 1.0),
+          (4.0, 20.0, 1.0, -1.0),
+          (20.0, 20.0, -1.0, -1.0),
+        ]) {
+          line(x, y, x + 6 * dx, y);
+          line(x, y, x, y + 6 * dy);
+        }
+      case HIcon.collapse:
+        for (final (x, y, dx, dy) in const [
+          (10.0, 10.0, -1.0, -1.0),
+          (14.0, 10.0, 1.0, -1.0),
+          (10.0, 14.0, -1.0, 1.0),
+          (14.0, 14.0, 1.0, 1.0),
+        ]) {
+          line(x, y, x + 6 * dx, y);
+          line(x, y, x, y + 6 * dy);
+        }
       case HIcon.stop:
         canvas.drawRRect(
           RRect.fromLTRBR(5, 5, 19, 19, const Radius.circular(3)),

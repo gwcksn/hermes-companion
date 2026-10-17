@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hermes_companion/avatar/avatar_view.dart';
+import 'package:hermes_companion/widgets/floating_avatar.dart';
 import 'package:hermes_companion/app.dart';
 import 'package:hermes_companion/avatar/avatar_state.dart';
 import 'package:hermes_companion/data/auth/credential_store.dart';
@@ -357,5 +359,39 @@ void main() {
       expect(find.textContaining('Microphone is blocked'), findsNothing);
       expect(find.byType(TextField), findsOneWidget);
     });
+  });
+
+  testWidgets('fullscreen panel: avatar floats and moves by long-press drag', (
+    tester,
+  ) async {
+    final h = _Harness(
+      initialPrefs: {
+        'settings.serverUrl': _url,
+        'settings.profile': 'default',
+        'settings.setupComplete': true,
+      },
+    );
+    await h.store.save(
+      const Credentials(server: _url, username: 'admin', password: 'secret'),
+    );
+    await h.pump(tester);
+    final pageW = tester.getSize(find.byType(PageView)).width;
+
+    await tester.tap(find.bySemanticsLabel('Fullscreen panel'));
+    await tester.pumpAndSettle();
+    expect(h.prefs.getBool('settings.fullscreenPanel'), isTrue);
+    expect(tester.getSize(find.byType(PageView)).width, greaterThan(pageW));
+    expect(find.byType(FloatingAvatar), findsOneWidget);
+
+    final before = tester.getTopLeft(find.byType(AvatarView));
+    final g = await tester.startGesture(tester.getCenter(find.byType(AvatarView)));
+    await tester.pump(const Duration(milliseconds: 700));
+    await g.moveBy(const Offset(-200, 0));
+    await tester.pump();
+    await g.up();
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(find.byType(AvatarView)).dx, lessThan(before.dx - 100));
+    expect(h.prefs.getDouble('settings.avatarPosX'), isNotNull);
+    expect(tester.takeException(), isNull);
   });
 }
