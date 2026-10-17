@@ -21,6 +21,9 @@ class ScreenFrame extends StatelessWidget {
     this.glow,
     this.stageAction,
     this.onAvatarTap,
+    this.onAvatarLongPress,
+    this.petStrip,
+    this.mess = 0,
     this.panelPadding = const EdgeInsets.fromLTRB(20, 0, 16, 12),
     this.panelKey,
     this.fullscreen = false,
@@ -41,6 +44,13 @@ class ScreenFrame extends StatelessWidget {
 
   /// Called when the avatar itself is tapped.
   final VoidCallback? onAvatarTap;
+  final VoidCallback? onAvatarLongPress;
+
+  /// Pet stats strip, drawn at the bottom of the stage without moving the avatar.
+  final Widget? petStrip;
+
+  /// Poop piles drawn over the avatar (0..3).
+  final int mess;
   final EdgeInsets panelPadding;
 
   /// Keeps the panel's state when toggling [fullscreen] reparents it.
@@ -61,6 +71,9 @@ class ScreenFrame extends StatelessWidget {
       glow: glow,
       action: stageAction,
       onAvatarTap: onAvatarTap,
+      onAvatarLongPress: onAvatarLongPress,
+      petStrip: petStrip,
+      mess: mess,
       portrait: portrait,
     );
     final panelBox = Container(
@@ -93,6 +106,7 @@ class ScreenFrame extends StatelessWidget {
             Positioned.fill(
               child: FloatingAvatar(
                 state: state,
+                mess: mess,
                 fx: avatarPos?.dx ?? 1,
                 fy: avatarPos?.dy ?? 0.5,
                 onTap: onAvatarTap,
@@ -122,6 +136,9 @@ class AvatarStage extends StatelessWidget {
     this.glow,
     this.action,
     this.onAvatarTap,
+    this.onAvatarLongPress,
+    this.petStrip,
+    this.mess = 0,
     this.portrait = false,
   });
 
@@ -132,6 +149,9 @@ class AvatarStage extends StatelessWidget {
   final Color? glow;
   final Widget? action;
   final VoidCallback? onAvatarTap;
+  final VoidCallback? onAvatarLongPress;
+  final Widget? petStrip;
+  final int mess;
 
   @override
   Widget build(BuildContext context) {
@@ -148,13 +168,21 @@ class AvatarStage extends StatelessWidget {
         ),
       ),
       // scaleDown keeps the stage intact when the keyboard shrinks the screen.
-      child: FittedBox(
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          FittedBox(
         fit: BoxFit.scaleDown,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(height: 12),
-            GestureDetector(behavior: HitTestBehavior.opaque, onTap: onAvatarTap, child: AvatarView(state: state)),
+            GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: onAvatarTap,
+              onLongPress: onAvatarLongPress,
+              child: AvatarView(state: state, mess: mess),
+            ),
             const SizedBox(height: 6),
             GestureDetector(
               onLongPress: kDebugMode
@@ -173,6 +201,15 @@ class AvatarStage extends StatelessWidget {
             const SizedBox(height: 12),
           ],
         ),
+      ),
+          if (petStrip != null && action == null)
+            Positioned(
+              bottom: 12,
+              left: 0,
+              right: 0,
+              child: Center(child: petStrip!),
+            ),
+        ],
       ),
     );
   }

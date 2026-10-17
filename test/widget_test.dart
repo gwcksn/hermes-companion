@@ -1,7 +1,10 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:hermes_companion/avatar/avatar_controller.dart';
 import 'package:hermes_companion/avatar/avatar_view.dart';
 import 'package:hermes_companion/widgets/floating_avatar.dart';
 import 'package:hermes_companion/app.dart';
@@ -14,6 +17,13 @@ import 'package:hermes_companion/data/settings_store.dart';
 import 'package:hermes_companion/data/voice/recorder.dart';
 import 'package:hermes_companion/data/location.dart';
 import 'package:hermes_companion/data/weather_provider.dart';
+import 'package:hermes_companion/layout/ambient.dart' show isNightWib;
+import 'package:hermes_companion/screens/clock_page.dart' show nowWib;
+import 'package:hermes_companion/pet/pet_controller.dart';
+import 'package:hermes_companion/pet/pet_state.dart';
+import 'package:hermes_companion/pet/pet_store.dart';
+import 'package:hermes_companion/pet/pet_ui.dart';
+import 'package:hermes_companion/pet/ui/stats_strip.dart';
 import 'package:hermes_companion/screens/home_shell.dart';
 import 'package:hermes_companion/theme/tokens.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -75,6 +85,7 @@ class _Harness {
           gatewayConnectorProvider.overrideWithValue(gateway.connect),
           notificationsBridgeProvider.overrideWithValue(notifications),
           recorderFactoryProvider.overrideWithValue(() => recorder),
+          petStatsDebugProvider.overrideWithValue(false),
         ],
         child: const HermesApp(),
       ),
@@ -101,6 +112,8 @@ void main() {
       'idle', 'listening', 'thinking', 'working', 'searching', 'speaking', //
       'done', 'oops', 'sleeping', 'happy', 'alarm', 'singing', 'coffee', 'reading', 'stargazing', 'meditating', //
       'gaming', 'doodling', 'stretching', 'daydreaming', 'clockpeek',
+      'pooping', 'eating', 'cleaning', 'hungry',
+      'curious', 'bored', 'proud', 'sulky', 'play', 'eatInfo',
     ]);
   });
 
@@ -393,5 +406,188 @@ void main() {
     expect(tester.getTopLeft(find.byType(AvatarView)).dx, lessThan(before.dx - 100));
     expect(h.prefs.getDouble('settings.avatarPosX'), isNotNull);
     expect(tester.takeException(), isNull);
+  });
+
+  group('pet', () {
+    Future<_Harness> homeHarness(
+      WidgetTester tester, {
+      Map<String, Object> extra = const {},
+    }) async {
+      final h = _Harness(
+        initialPrefs: {
+          'settings.serverUrl': _url,
+          'settings.profile': 'default',
+          'settings.setupComplete': true,
+          ...extra,
+        },
+      );
+      await h.store.save(
+        const Credentials(server: _url, username: 'admin', password: 'secret'),
+      );
+      await h.pump(tester);
+      return h;
+    }
+
+    ProviderContainer containerOf(WidgetTester tester) =>
+        ProviderScope.containerOf(tester.element(find.byType(HomeShell)));
+
+    double stripOpacity(WidgetTester tester) => tester
+        .widget<AnimatedOpacity>(
+          find.descendant(
+            of: find.byType(StatsStrip),
+            matching: find.byType(AnimatedOpacity),
+          ),
+        )
+        .opacity;
+
+    testWidgets('stats strip shows for a few seconds after a tap', (tester) async {
+      await homeHarness(tester);
+      expect(stripOpacity(tester), 0);
+      final before = containerOf(tester).read(petProvider).mood;
+
+      await tester.tap(find.byType(AvatarView));
+      await tester.pump();
+      expect(stripOpacity(tester), 1);
+      expect(containerOf(tester).read(petProvider).mood, greaterThan(before));
+
+      await tester.pump(const Duration(seconds: 5));
+      expect(stripOpacity(tester), 0);
+    });
+
+    testWidgets('care sheet: Play raises mood, Feed asks Hermes then falls back to a snack', (
+      tester,
+    ) async {
+      final h = await homeHarness(tester);
+      final c = containerOf(tester);
+
+      await tester.longPress(find.byType(AvatarView));
+      await tester.pumpAndSettle();
+      expect(find.text('Feed'), findsOneWidget);
+      expect(find.text('Play'), findsOneWidget);
+      expect(find.text('Tuck in'), findsOneWidget);
+
+      final mood = c.read(petProvider).mood;
+      await tester.tap(find.text('Play'));
+      await tester.pumpAndSettle();
+      expect(c.read(petProvider).mood, greaterThan(mood));
+
+      final curiosity = c.read(petProvider).curiosity;
+      await tester.longPress(find.byType(AvatarView));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Feed'));
+      await tester.pump(const Duration(seconds: 4)); // eating scene, then the fact request
+      await tester.pumpAndSettle();
+      expect(h.gateway.last.methods, contains('prompt.submit'));
+      expect(c.read(petProvider).curiosity, greaterThan(curiosity + 20));
+
+      await tester.longPress(find.byType(AvatarView));
+      await tester.pumpAndSettle();
+      expect(find.text('Full'), findsOneWidget); // 70 + 35 hunger
+      await tester.tapAt(const Offset(5, 5)); // dismiss
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('tuck in puts the avatar to sleep', (tester) async {
+      await homeHarness(tester);
+      final c = containerOf(tester);
+      await tester.longPress(find.byType(AvatarView));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tuck in'));
+      await tester.pumpAndSettle();
+      expect(c.read(avatarProvider), AvatarState.sleeping);
+      expect(c.read(petProvider).sleeping, isTrue);
+    });
+
+    Map<String, Object> petSeed({
+      double hunger = 70,
+      int poops = 0,
+      DateTime? poopDueAt,
+    }) => {
+      PetStore.key: jsonEncode(
+        PetState(
+          energy: 80,
+          mood: 70,
+          curiosity: 60,
+          hunger: hunger,
+          poops: poops,
+          poopDueAt: poopDueAt,
+          lastTick: DateTime.now(),
+          lastInteraction: DateTime.now(),
+        ).toJson(),
+      ),
+    };
+
+    testWidgets('hungry: Feed pill feeds, plays the fun-fact snack scene, then goes away', (
+      tester,
+    ) async {
+      await homeHarness(tester, extra: petSeed(hunger: 20));
+      final c = containerOf(tester);
+      expect(find.byKey(const ValueKey('feed-button')), findsOneWidget);
+      expect(find.byKey(const ValueKey('clean-button')), findsNothing);
+
+      await tester.tap(find.byKey(const ValueKey('feed-button')));
+      await tester.pump();
+      expect(c.read(avatarProvider), AvatarState.eatInfo); // online: a fun-fact snack
+      expect(c.read(petProvider).hunger, greaterThan(50));
+      expect(c.read(petProvider).poopDueAt, isNotNull);
+      await tester.pump(const Duration(seconds: 5));
+      expect(find.byKey(const ValueKey('feed-button')), findsNothing);
+    });
+
+    testWidgets('piles: Clean pill plays the cleaning scene and clears them', (
+      tester,
+    ) async {
+      await homeHarness(tester, extra: petSeed(poops: 2));
+      final c = containerOf(tester);
+      expect(find.byKey(const ValueKey('clean-button')), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('clean-button')));
+      await tester.pump();
+      expect(c.read(avatarProvider), AvatarState.cleaning);
+      expect(c.read(petProvider).poops, 2); // still there until the sweep ends
+      expect(find.byKey(const ValueKey('clean-button')), findsNothing); // no double taps mid-scene
+      await tester.pump(const Duration(seconds: 5));
+      expect(c.read(petProvider).poops, 0);
+      expect(c.read(avatarProvider), AvatarState.idle);
+    });
+
+    testWidgets('a poop that came due while the app was closed shows up as a pile', (
+      tester,
+    ) async {
+      await homeHarness(
+        tester,
+        extra: petSeed(poopDueAt: DateTime.now().subtract(const Duration(minutes: 5))),
+      );
+      expect(containerOf(tester).read(petProvider).poops, 1);
+      expect(find.byKey(const ValueKey('clean-button')), findsOneWidget);
+    });
+
+    testWidgets(
+      'a due meal plays the pooping scene, then leaves a pile',
+      (tester) async {
+        await homeHarness(
+          tester,
+          extra: petSeed(poopDueAt: DateTime.now().add(const Duration(seconds: 20))),
+        );
+        final c = containerOf(tester);
+        expect(c.read(petProvider).poops, 0);
+        await tester.pump(const Duration(seconds: 65)); // the 1-minute pet tick finds it due
+        expect(c.read(avatarProvider), AvatarState.pooping);
+        await tester.pump(const Duration(seconds: 4));
+        expect(c.read(petProvider).poops, 1);
+        expect(c.read(avatarProvider), AvatarState.idle);
+        expect(find.byKey(const ValueKey('clean-button')), findsOneWidget);
+      },
+      skip: isNightWib(nowWib()), // pets wait for morning at night
+    );
+
+    testWidgets('quiet pet hides the strip and the care sheet', (tester) async {
+      await homeHarness(tester, extra: {'settings.quietPet': true});
+      expect(find.byType(StatsStrip), findsNothing);
+      await tester.longPress(find.byType(AvatarView));
+      await tester.pumpAndSettle();
+      expect(find.text('Tuck in'), findsNothing);
+      expect(containerOf(tester).read(statsVisibleProvider), isFalse);
+    });
   });
 }

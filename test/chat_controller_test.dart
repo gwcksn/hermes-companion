@@ -6,6 +6,7 @@ import 'package:hermes_companion/data/auth/credential_store.dart';
 import 'package:hermes_companion/data/gateway/chat_controller.dart';
 import 'package:hermes_companion/data/hermes_client.dart';
 import 'package:hermes_companion/data/settings_store.dart';
+import 'package:hermes_companion/pet/pet_controller.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'fakes/fake_gateway.dart';
@@ -164,6 +165,22 @@ void main() {
     r.gateway.last.event('message.complete', 'live-1', {'text': 'Sunny.', 'status': 'complete'});
     await r.settle();
     expect(r.avatar, AvatarState.done);
+  });
+
+  test('chat turns feed the pet', () async {
+    final r = _Rig(prefs);
+    await r.start();
+    addTearDown(r.c.dispose);
+    final start = r.c.read(petProvider);
+    await r.ctl.send('thanks, that was great!');
+    expect(r.c.read(petProvider).mood, closeTo(start.mood + 4, 0.01));
+    expect(r.c.read(petProvider).curiosity, closeTo(start.curiosity + 5, 0.01));
+    r.gateway.last.event('message.complete', 'live-1', {
+      'text': 'Anytime!',
+      'status': 'complete',
+    });
+    await r.settle();
+    expect(r.c.read(petProvider).mood, closeTo(start.mood + 4 + 2 + 10, 0.01));
   });
 
   test('turn errors show a note and the oops avatar', () async {

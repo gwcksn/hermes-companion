@@ -15,6 +15,7 @@ class AppSettings {
     this.readAloud = false,
     this.setupComplete = false,
     this.fullscreenPanel = false,
+    this.quietPet = false,
     this.avatarPosX,
     this.avatarPosY,
   });
@@ -29,6 +30,9 @@ class AppSettings {
   /// Panel fills the screen and the avatar floats over it.
   final bool fullscreenPanel;
 
+  /// Hides all pet UI (stats strip, care sheet) so the screen stays a clean clock.
+  final bool quietPet;
+
   /// Floating avatar position as a 0..1 fraction of the free area; null = default spot.
   final double? avatarPosX;
   final double? avatarPosY;
@@ -41,6 +45,7 @@ class AppSettings {
     bool? readAloud,
     bool? setupComplete,
     bool? fullscreenPanel,
+    bool? quietPet,
   }) => AppSettings(
     serverUrl: serverUrl ?? this.serverUrl,
     profile: profile ?? this.profile,
@@ -49,6 +54,7 @@ class AppSettings {
     readAloud: readAloud ?? this.readAloud,
     setupComplete: setupComplete ?? this.setupComplete,
     fullscreenPanel: fullscreenPanel ?? this.fullscreenPanel,
+    quietPet: quietPet ?? this.quietPet,
     avatarPosX: avatarPosX,
     avatarPosY: avatarPosY,
   );
@@ -63,6 +69,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
   static const _readAloud = 'settings.readAloud';
   static const _done = 'settings.setupComplete';
   static const _fullscreen = 'settings.fullscreenPanel';
+  static const _quietPet = 'settings.quietPet';
   static const _avatarX = 'settings.avatarPosX';
   static const _avatarY = 'settings.avatarPosY';
 
@@ -79,6 +86,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
       readAloud: p.getBool(_readAloud) ?? false,
       setupComplete: p.getBool(_done) ?? false,
       fullscreenPanel: p.getBool(_fullscreen) ?? false,
+      quietPet: p.getBool(_quietPet) ?? false,
       avatarPosX: p.getDouble(_avatarX),
       avatarPosY: p.getDouble(_avatarY),
     );
@@ -102,6 +110,11 @@ class SettingsNotifier extends Notifier<AppSettings> {
     await _prefs.setBool(_fullscreen, on);
   }
 
+  Future<void> setQuietPet(bool on) async {
+    state = state.copyWith(quietPet: on);
+    await _prefs.setBool(_quietPet, on);
+  }
+
   Future<void> setAvatarPos(double x, double y) async {
     state = AppSettings(
       serverUrl: state.serverUrl,
@@ -111,6 +124,7 @@ class SettingsNotifier extends Notifier<AppSettings> {
       readAloud: state.readAloud,
       setupComplete: state.setupComplete,
       fullscreenPanel: state.fullscreenPanel,
+      quietPet: state.quietPet,
       avatarPosX: x,
       avatarPosY: y,
     );

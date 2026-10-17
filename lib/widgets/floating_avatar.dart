@@ -13,11 +13,13 @@ class FloatingAvatar extends StatefulWidget {
     required this.fx,
     required this.fy,
     required this.onMoved,
+    this.mess = 0,
     this.onTap,
     this.size = 84,
   });
 
   final AvatarState state;
+  final int mess;
   final double fx;
   final double fy;
   final double size;
@@ -86,7 +88,7 @@ class _FloatingAvatarState extends State<FloatingAvatar> {
                 child: AnimatedScale(
                   scale: _lifted ? 1.15 : 1,
                   duration: const Duration(milliseconds: 120),
-                  child: AvatarView(state: widget.state, size: widget.size),
+                  child: AvatarView(state: widget.state, size: widget.size, mess: widget.mess),
                 ),
               ),
             ),

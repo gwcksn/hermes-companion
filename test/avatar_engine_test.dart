@@ -55,7 +55,31 @@ void main() {
     expect(mouth.getBounds().right, closeTo(108, 0.01));
   });
 
-  test('all 21 scenes exist and paint across a full cycle', () {
+  test('care scene variants and the mess overlay paint across a cycle', () {
+    final groups = [
+      ...poopingScenes,
+      ...cleaningScenes,
+      ...messLayers,
+      for (final s in [AvatarState.pooping, AvatarState.cleaning])
+        for (var n = 0; n <= 3; n++) sceneFor(s, n),
+    ];
+    expect(poopingScenes, hasLength(3));
+    expect(cleaningScenes, hasLength(4));
+    expect(messLayers, hasLength(4));
+    expect(overlayFor(AvatarState.idle, 0), isNull);
+    expect(overlayFor(AvatarState.pooping, 2), isNull);
+    expect(overlayFor(AvatarState.cleaning, 2), isNull);
+    expect(overlayFor(AvatarState.idle, 2), same(messLayers[2]));
+    for (final g in groups) {
+      for (var t = 0.0; t < 4.2; t += 0.07) {
+        final rec = PictureRecorder();
+        g.paint(Canvas(rec), t, 1);
+        rec.endRecording().dispose();
+      }
+    }
+  });
+
+  test('all 32 scenes exist and paint across a full cycle', () {
     expect(avatarScenes.keys, containsAll(AvatarState.values));
     for (final scene in avatarScenes.values) {
       for (var t = 0.0; t < 10; t += 0.37) {

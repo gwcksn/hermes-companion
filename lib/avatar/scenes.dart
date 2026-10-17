@@ -6,6 +6,9 @@ import '../theme/tokens.dart';
 import 'avatar_state.dart';
 import 'engine.dart';
 
+part 'scenes_care.dart';
+part 'scenes_pet.dart';
+
 // ---- @keyframes -------------------------------------------------------------
 
 const _bob = Keyframes({
@@ -966,4 +969,27 @@ final Map<AvatarState, Group> avatarScenes = {
   AvatarState.stretching: _stretching(),
   AvatarState.daydreaming: _daydreaming(),
   AvatarState.clockpeek: _clockpeek(),
+  AvatarState.pooping: poopingScenes[0],
+  AvatarState.eating: _eating(),
+  AvatarState.cleaning: cleaningScenes[1],
+  AvatarState.hungry: _hungry(),
+  AvatarState.curious: _curious(),
+  AvatarState.bored: _bored(),
+  AvatarState.proud: _proud(),
+  AvatarState.sulky: _sulky(),
+  AvatarState.play: _play(),
+  AvatarState.eatInfo: _eatInfo(),
 };
+
+/// The scene for [state]; the pooping and cleaning scenes depend on how many piles are already down.
+Group sceneFor(AvatarState state, int mess) => switch (state) {
+  AvatarState.pooping => poopingScenes[mess.clamp(0, poopingScenes.length - 1)],
+  AvatarState.cleaning => cleaningScenes[mess.clamp(0, cleaningScenes.length - 1)],
+  _ => avatarScenes[state]!,
+};
+
+/// Piles drawn over the scene, or null when there are none or the scene draws its own.
+Group? overlayFor(AvatarState state, int mess) =>
+    mess <= 0 || state == AvatarState.pooping || state == AvatarState.cleaning
+    ? null
+    : messLayers[mess.clamp(0, maxPoopSlots)];

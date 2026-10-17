@@ -2,7 +2,7 @@ import 'package:flutter/painting.dart';
 
 import '../theme/tokens.dart';
 
-/// The 21 avatar states: 12 core (tokens.json order) then 9 idle activities. See HANDOFF.md §5 for triggers.
+/// The 31 avatar states: 12 core (tokens.json order), 9 idle activities, the 4 care scenes, then the 6 pet-mood scenes. See HANDOFF.md §5 for triggers.
 enum AvatarState {
   idle('Idle'),
   listening('Listening'),
@@ -24,7 +24,17 @@ enum AvatarState {
   doodling('Doodling'),
   stretching('Stretching'),
   daydreaming('Daydreaming'),
-  clockpeek('Clock peek');
+  clockpeek('Clock peek'),
+  pooping('Pooping'),
+  eating('Eating'),
+  cleaning('Cleaning'),
+  hungry('Hungry'),
+  curious('Curious'),
+  bored('Bored'),
+  proud('Proud'),
+  sulky('Sulky'),
+  play('Play'),
+  eatInfo('Fun fact');
 
   const AvatarState(this.label);
 
@@ -33,7 +43,20 @@ enum AvatarState {
   /// Stage caption color: mint while Hermes is actively engaged, muted otherwise.
   Color get labelColor => switch (this) {
     oops => HColors.coral,
-    working || searching || thinking || listening || speaking || done || happy || alarm || singing => HColors.mint,
+    working ||
+    searching ||
+    thinking ||
+    listening ||
+    speaking ||
+    done ||
+    happy ||
+    alarm ||
+    singing ||
+    eating ||
+    cleaning ||
+    proud ||
+    play ||
+    eatInfo => HColors.mint,
     _ => HColors.muted,
   };
 
@@ -41,8 +64,8 @@ enum AvatarState {
   /// so calm states run slower; fast motions (jitter, talking, typing, hopping) keep 30 fps.
   int get fps => switch (this) {
     sleeping => 10,
-    idle || thinking || searching || listening || happy || oops => 20,
-    working || speaking || done || alarm || singing || gaming => 30,
+    idle || thinking || searching || listening || happy || oops || hungry || curious || bored || proud || sulky => 20,
+    working || speaking || done || alarm || singing || gaming || pooping || eating || cleaning || play || eatInfo => 30,
     coffee || reading || stargazing || meditating || doodling || stretching || daydreaming || clockpeek => 20,
   };
 

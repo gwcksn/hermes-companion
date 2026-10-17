@@ -3,10 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../avatar/avatar_controller.dart';
 import '../avatar/avatar_state.dart';
+import '../avatar/scenes.dart' show broomIcon, cookieIcon;
 import '../data/connection.dart';
 import '../data/gateway/chat_controller.dart';
 import '../data/settings_store.dart';
 import '../layout/ambient.dart';
+import '../pet/pet_actions.dart';
+import '../pet/pet_controller.dart';
+import '../pet/pet_rules.dart';
+import '../pet/pet_wiring.dart';
+import '../pet/ui/care_sheet.dart';
+import '../pet/ui/prop_button.dart';
+import '../pet/ui/stats_strip.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
 import '../widgets/frame.dart';
@@ -51,6 +59,7 @@ class _HomeShellState extends ConsumerState<HomeShell> {
 
   @override
   Widget build(BuildContext context) {
+    ref.watch(petWiringProvider);
     final link = ref.watch(connectionProvider);
     // Keep the chat socket alive on every page without rebuilding the shell per streamed token.
     ref.listen(chatProvider, (_, _) {});
@@ -61,6 +70,12 @@ class _HomeShellState extends ConsumerState<HomeShell> {
         link.state == LinkState.offline || chatPhase == ChatPhase.offline;
     final settings = ref.watch(settingsProvider);
     final fullscreen = settings.fullscreenPanel;
+    final quiet = settings.quietPet;
+    final (hungry, full, poops) = ref.watch(petProvider.select((p) => (isHungry(p), isFull(p), p.poops)));
+    final mess = quiet ? 0 : poops;
+    final busyScene = state == AvatarState.eating || state == AvatarState.cleaning || state == AvatarState.pooping;
+    final showFeed = !quiet && hungry && !full && !busyScene;
+    final showClean = !quiet && poops > 0 && !busyScene;
     void reconnect() {
       ref.read(connectionProvider.notifier).check();
       ref.read(chatProvider.notifier).connect();
@@ -74,12 +89,43 @@ class _HomeShellState extends ConsumerState<HomeShell> {
           : Offset(settings.avatarPosX!, settings.avatarPosY!),
       onAvatarMoved: ref.read(settingsProvider.notifier).setAvatarPos,
       state: state,
-      onAvatarTap: ref.read(ambientProvider.notifier).petAvatar,
-      stageAction: disconnected
-          ? PillButton(
-              'Reconnect',
-              style: PillStyle.secondary,
-              onPressed: reconnect,
+      mess: mess,
+      onAvatarTap: fullscreen && (showFeed || showClean)
+          // The floating avatar has no pills: tapping it while hungry or messy opens the care sheet.
+          ? () => showCareSheet(context)
+          : ref.read(ambientProvider.notifier).petAvatar,
+      onAvatarLongPress: quiet ? null : () => showCareSheet(context),
+      petStrip: quiet ? null : const StatsStrip(),
+      stageAction: disconnected || showFeed || showClean
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (disconnected) PillButton('Reconnect', style: PillStyle.secondary, onPressed: reconnect),
+                if (disconnected && (showFeed || showClean)) const SizedBox(height: 8),
+                if (showFeed || showClean)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (showFeed)
+                        PropButton(
+                          key: const ValueKey('feed-button'),
+                          icon: cookieIcon,
+                          label: 'Feed',
+                          color: HColors.peach,
+                          onPressed: () => feedPet(ref),
+                        ),
+                      if (showFeed && showClean) const SizedBox(width: 16),
+                      if (showClean)
+                        PropButton(
+                          key: const ValueKey('clean-button'),
+                          icon: broomIcon,
+                          label: 'Clean',
+                          color: HColors.mint,
+                          onPressed: () => cleanPet(ref),
+                        ),
+                    ],
+                  ),
+              ],
             )
           : null,
       panelPadding: EdgeInsets.zero,

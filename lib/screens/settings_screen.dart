@@ -9,6 +9,7 @@ import '../data/google/workspace_provider.dart';
 import '../data/hermes_client.dart';
 import '../data/notifications/notifications_provider.dart';
 import '../data/settings_store.dart';
+import '../pet/pet_controller.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
 import '../widgets/frame.dart';
@@ -189,6 +190,22 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           .pushAndRemoveUntil(fadeRoute(const Setup1Server()), (_) => false);
   }
 
+  Future<void> _resetPet() async {
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: HColors.panel,
+        title: const Text('Reset pet?'),
+        content: const Text('Energy, mood and curiosity go back to their starting values.'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('Cancel')),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('Reset')),
+        ],
+      ),
+    );
+    if (ok == true) await ref.read(petProvider.notifier).reset();
+  }
+
   @override
   Widget build(BuildContext context) {
     void back() => Navigator.of(context).pop();
@@ -275,6 +292,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                             label: 'Read replies aloud',
                             value: _readAloud,
                             onChanged: (v) => setState(() => _readAloud = v),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: SwitchPill(
+                            label: 'Quiet pet',
+                            value: ref.watch(
+                              settingsProvider.select((s) => s.quietPet),
+                            ),
+                            onChanged: (v) => ref
+                                .read(settingsProvider.notifier)
+                                .setQuietPet(v),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: PillButton(
+                            'Reset pet',
+                            style: PillStyle.secondary,
+                            expand: true,
+                            onPressed: _resetPet,
                           ),
                         ),
                         const Spacer(),

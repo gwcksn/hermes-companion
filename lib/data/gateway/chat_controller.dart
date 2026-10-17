@@ -8,6 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../avatar/avatar_controller.dart';
 import '../../avatar/avatar_state.dart';
 import '../../avatar/reactions.dart';
+import '../../pet/pet_controller.dart';
+import '../../pet/pet_events.dart';
 import '../hermes_client.dart';
 import '../settings_store.dart';
 import '../voice/reply_speaker.dart';
@@ -306,6 +308,7 @@ class ChatController extends Notifier<ChatState> {
       _append(const ChatMessage(ChatRole.note, 'Not connected. Will reconnect shortly.', error: true));
       return;
     }
+    ref.read(petProvider.notifier).onEvent(const UserMessageSent());
     state = state.copyWith(busy: true, activity: () => null);
     _ensureStreamingBubble();
     _avatar(AvatarState.thinking);
@@ -443,6 +446,9 @@ class ChatController extends Notifier<ChatState> {
       case 'interrupted':
         _endTurn(AvatarState.idle);
       default:
+        final pet = ref.read(petProvider.notifier);
+        pet.onEvent(const ReplyFinished());
+        if (_friendlyTurn) pet.onEvent(const ThanksDetected());
         _endTurn(_friendlyTurn ? AvatarState.happy : AvatarState.done);
     }
     _friendlyTurn = false;

@@ -6,8 +6,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../avatar/avatar_controller.dart';
 import '../avatar/avatar_state.dart';
+import '../avatar/scenes.dart' show cleaningFor, poopingFor, hungryFor;
 import '../data/gateway/chat_controller.dart';
 import '../data/settings_store.dart';
+import '../pet/pet_controller.dart';
+import '../pet/pet_events.dart';
+import '../pet/pet_rules.dart';
+import '../pet/pet_state.dart' show maxPoops;
+import '../pet/pet_ui.dart';
 import '../screens/clock_page.dart' show nowWib;
 
 const _shiftEvery = Duration(minutes: 3);
@@ -33,7 +39,24 @@ const idleActivities = [
   AvatarState.clockpeek,
 ];
 
-final _activityStates = {...idleActivities};
+/// Idle activities plus the need hints: calm states we set ourselves, ended by any touch.
+final _activityStates = {
+  ...idleActivities,
+  AvatarState.hungry,
+  AvatarState.curious,
+  AvatarState.bored,
+  AvatarState.sulky,
+};
+
+/// Scene that hints at [hint].
+AvatarState _sceneForHint(NeedHint hint) => switch (hint) {
+  NeedHint.hungry => AvatarState.hungry,
+  NeedHint.messy => AvatarState.sulky,
+  NeedHint.sleepy => AvatarState.stretching,
+  NeedHint.bored => AvatarState.bored,
+  NeedHint.curious => AvatarState.curious,
+};
+
 final _idleLike = {AvatarState.idle, ..._activityStates};
 
 const nightDimOpacity = 0.55;
@@ -75,6 +98,9 @@ class AmbientController extends Notifier<AmbientState> {
   Timer? _happyTimer;
   final _rng = Random();
   AvatarState? _lastActivity;
+  DateTime? _lastTouchDay;
+  final _careTimers = <Timer>[];
+  var _careBusy = false;
 
   @override
   AmbientState build() {
@@ -91,6 +117,9 @@ class AmbientController extends Notifier<AmbientState> {
       nightTimer.cancel();
       _cancelIdle();
       _happyTimer?.cancel();
+      for (final t in _careTimers) {
+        t.cancel();
+      }
     });
 
     // Chat or avatar activity counts as use; the calm states we set ourselves do not.
@@ -105,6 +134,7 @@ class AmbientController extends Notifier<AmbientState> {
 
   /// Any sign of use: reset the idle clock and end singing or sleep. A [touch] gets a happy greeting.
   void poke({bool touch = false}) {
+    if (touch) _firstTouchOfDay();
     final cur = ref.read(avatarProvider);
     final wasResting = state.asleep || _activityStates.contains(cur);
     if (state.asleep) state = state.copyWith(asleep: false);
@@ -120,7 +150,92 @@ class AmbientController extends Notifier<AmbientState> {
 
   /// Tapping the avatar while it is idle makes it happy for a moment.
   void petAvatar() {
+    ref.read(petProvider.notifier).onEvent(const AvatarTapped());
+    ref.read(statsPeekProvider.notifier).peek();
     if (ref.read(avatarProvider) == AvatarState.idle) _happy();
+  }
+
+  /// Plays [scene] for [duration], then returns to idle if nothing else took over.
+  void showScene(AvatarState scene, Duration duration) {
+    _happyTimer?.cancel();
+    ref.read(avatarProvider.notifier).set(scene);
+    _happyTimer = Timer(duration, () {
+      if (ref.read(avatarProvider) == scene) {
+        ref.read(avatarProvider.notifier).set(AvatarState.idle);
+      }
+    });
+  }
+
+  /// Plays a care [scene] for [d], then runs [done] and returns to idle if nothing else took over.
+  /// Its end is never cancelled by another scene, so a pile or a clean-up is always recorded.
+  void _care(AvatarState scene, Duration d, void Function() done) {
+    _careBusy = true;
+    ref.read(avatarProvider.notifier).set(scene);
+    late final Timer t;
+    t = Timer(d, () {
+      _careTimers.remove(t);
+      _careBusy = false;
+      done();
+      if (ref.read(avatarProvider) == scene) {
+        ref.read(avatarProvider.notifier).set(AvatarState.idle);
+      }
+    });
+    _careTimers.add(t);
+  }
+
+  /// A task was finished: show the proud scene if nothing more important is on screen.
+  void reactProud() {
+    if (_careBusy || state.asleep || ref.read(settingsProvider).quietPet) return;
+    if (!_idleLike.contains(ref.read(avatarProvider))) return;
+    showScene(AvatarState.proud, hungryFor);
+  }
+
+  /// Runs [fn] after [d], cancelled with the controller. Used to let a care scene finish first.
+  void later(Duration d, void Function() fn) {
+    late final Timer t;
+    t = Timer(d, () {
+      _careTimers.remove(t);
+      fn();
+    });
+    _careTimers.add(t);
+  }
+
+  /// A meal came due: play the pooping scene and add the pile. Waits while the pet is busy, asleep,
+  /// at night or in Quiet pet; piles that are already at the cap are added without a scene.
+  void playPoop() {
+    if (_careBusy || state.asleep || state.night) return;
+    if (ref.read(settingsProvider).quietPet) return;
+    if (!_idleLike.contains(ref.read(avatarProvider))) return;
+    final pet = ref.read(petProvider);
+    if (!poopIsDue(pet, ref.read(petClockProvider).now())) return;
+    final notifier = ref.read(petProvider.notifier);
+    if (pet.poops >= maxPoops) return notifier.onEvent(const PoopHappened());
+    _care(AvatarState.pooping, poopingFor, () => notifier.onEvent(const PoopHappened()));
+  }
+
+  /// Sweeps away every pile with the cleaning scene.
+  void cleanUp() {
+    if (_careBusy || ref.read(petProvider).poops == 0) return;
+    poke();
+    final notifier = ref.read(petProvider.notifier);
+    _care(AvatarState.cleaning, cleaningFor, () => notifier.onEvent(const CleanTapped()));
+  }
+
+  /// Tuck-in: sleep now instead of waiting out the idle ladder. Any touch wakes it.
+  void sleepNow() {
+    _cancelIdle();
+    _happyTimer?.cancel();
+    state = state.copyWith(asleep: true);
+    ref.read(avatarProvider.notifier).set(AvatarState.sleeping);
+  }
+
+  void _firstTouchOfDay() {
+    final now = nowWib();
+    if (now.hour < 6) return;
+    final day = DateTime(now.year, now.month, now.day);
+    if (_lastTouchDay == day) return;
+    _lastTouchDay = day;
+    ref.read(petProvider.notifier).onEvent(const DailyFirstTouch());
   }
 
   void _happy() {
@@ -143,7 +258,7 @@ class AmbientController extends Notifier<AmbientState> {
     _lastActivity = null;
     _idleTimers.add(Timer(activityStartAfter, _nextActivity));
     _idleTimers.add(
-      Timer(sleepAfter, () {
+      Timer(sleepAfterFor(ref.read(petProvider), sleepAfter), () {
         if (!_idleLike.contains(ref.read(avatarProvider))) return _armIdle();
         state = state.copyWith(asleep: true);
         ref.read(avatarProvider.notifier).set(AvatarState.sleeping);
@@ -154,10 +269,21 @@ class AmbientController extends Notifier<AmbientState> {
   void _nextActivity() {
     // Never cut off thinking, alarms or errors.
     if (!_idleLike.contains(ref.read(avatarProvider))) return;
-    final night = isNightWib(nowWib());
-    final pool = night ? idleActivities.where((a) => a.nightOk).toList() : idleActivities;
-    final options = pool.length > 1 ? pool.where((a) => a != _lastActivity).toList() : pool;
-    final pick = options[_rng.nextInt(options.length)];
+    if (!ref.read(settingsProvider).quietPet) {
+      final hint = pickNeedHint(ref.read(petProvider), _rng);
+      if (hint != null) {
+        showScene(_sceneForHint(hint), hungryFor);
+        _idleTimers.add(Timer(activityEvery, _nextActivity));
+        return;
+      }
+    }
+    final pick = pickActivity(
+      ref.read(petProvider).copyWith(lastActivity: _lastActivity),
+      idleActivities,
+      night: isNightWib(nowWib()),
+      rng: _rng,
+    );
+    if (pick == null) return;
     _lastActivity = pick;
     ref.read(avatarProvider.notifier).set(pick);
     _idleTimers.add(Timer(activityEvery, _nextActivity));

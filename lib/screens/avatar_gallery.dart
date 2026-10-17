@@ -5,7 +5,7 @@ import '../avatar/avatar_view.dart';
 import '../theme/tokens.dart';
 import '../widgets/common.dart';
 
-/// Debug-only grid of all 21 states, mirroring assets/avatar/gallery.html.
+/// Debug-only grid of all states, mirroring assets/avatar/gallery.html.
 /// Open by long-pressing the "Hermes" name under the avatar (debug builds only).
 class AvatarGallery extends StatelessWidget {
   const AvatarGallery({super.key});
@@ -24,7 +24,7 @@ class AvatarGallery extends StatelessWidget {
             for (final s in AvatarState.values)
               Column(
                 children: [
-                  AvatarView(state: s, size: 120),
+                  AvatarView(state: s, size: 120, mess: s == AvatarState.pooping || s == AvatarState.cleaning ? 1 : 0),
                   const SizedBox(height: 6),
                   Text(s.label, style: hText(13, color: s.labelColor)),
                 ],
