@@ -86,7 +86,7 @@ Open-Meteo `/v1/forecast` (free, no key) for Yogyakarta, °C, WIB (`WeatherPlace
 
 Tests **never touch the network**. The harness pattern is documented in `widget_test.dart` (`_Harness`) and `chat_controller_test.dart` (`_Rig`).
 
-- Fake REST: `test/fakes/fake_hermes.dart` is a `FakeHermes implements HttpClientAdapter`; `fakeClient(url, store, server)` wires it into a real `Dio`. Defaults: user `admin`, pass `secret`, version `0.21.6`, profiles `default/crawly/ligwina`.
+- Fake REST: `test/fakes/fake_hermes.dart` is a `FakeHermes implements HttpClientAdapter`; `fakeClient(url, store, server)` wires it into a real `Dio`. Defaults: user `admin`, pass `secret`, version `0.21.6`, profiles `default/work/personal`.
 - Fake gateway: `test/fakes/fake_gateway.dart` implements `GatewayTransport`; auto-emits `gateway.ready` after connect; supports `event(type, sessionId, [payload])` and `serverRequest(id, method, params)`.
 - In-memory keystore: `MemoryCredentialStore` (in `fake_hermes.dart`) drops creds/cookies on `clear()`. It also drops stored creds on wrong password (the test asserts `expect(h.store.creds, isNull)` after a failed sign-in).
 - Real SharedPreferences: `SharedPreferences.setMockInitialValues({...})` then `SharedPreferences.getInstance()`.
@@ -122,4 +122,3 @@ Tests **never touch the network**. The harness pattern is documented in `widget_
 - `tokens.json` ↔ `lib/theme/tokens.dart` — colors/fonts/radii/sizes.
 - `design/*.dc.html` — exact measurements/colors per screen (Claude Design runtime to render).
 - `CLAUDE.md` — overlapping agent guidance, kept in sync with this file.
-- `.claude/settings.local.json` — pre-approved Bash/WebFetch permissions for the owner's Tailscale host.

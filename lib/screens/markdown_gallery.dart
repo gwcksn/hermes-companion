@@ -41,8 +41,8 @@ class MarkdownGallery extends StatelessWidget {
       '|||\n'
           '|---|---|\n'
           '| user | hermes |\n'
-          '| ligwina | main |\n'
-          '| crawly | fetch |',
+          '| personal | main |\n'
+          '| work | fetch |',
     ),
     (
       'Mixed inline styles',

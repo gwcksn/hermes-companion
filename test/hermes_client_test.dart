@@ -19,7 +19,7 @@ void main() {
 
   test('profile query is omitted for default', () {
     expect(profileQuery('default'), isEmpty);
-    expect(profileQuery('crawly'), {'profile': 'crawly'});
+    expect(profileQuery('work'), {'profile': 'work'});
   });
 
   test('parses Set-Cookie and drops deletions', () {
@@ -31,7 +31,7 @@ void main() {
     final s = await fakeClient(_url, MemoryCredentialStore(), FakeHermes()).status();
     expect(s.summary, 'Reachable. Hermes 0.21.6, gateway running');
     expect(s.passwordLogin, isTrue);
-    expect(s.profiles, ['default', 'crawly', 'ligwina']);
+    expect(s.profiles, ['default', 'work', 'personal']);
   });
 
   test('login stores the session cookie; authed calls send it', () async {
@@ -41,9 +41,9 @@ void main() {
     await store.save(const Credentials(server: _url, username: 'admin', password: 'secret'));
     await c.login('admin', 'secret');
     expect(store.cookies, {'hermes_session': 's1'});
-    expect(await c.modelName('default'), 'bash-pro');
-    expect(await c.modelName('crawly'), 'crawly-model');
-    expect(server.requests.last.uri.queryParameters['profile'], 'crawly');
+    expect(await c.modelName('default'), 'hermes-pro');
+    expect(await c.modelName('work'), 'work-model');
+    expect(server.requests.last.uri.queryParameters['profile'], 'work');
   });
 
   test('wrong password is reported as bad credentials', () async {
@@ -59,7 +59,7 @@ void main() {
 
     server.sessionValue = 's2'; // server restarted / session expired
     final fresh = fakeClient(_url, store, server); // e.g. after an app restart
-    expect(await fresh.modelName('default'), 'bash-pro');
+    expect(await fresh.modelName('default'), 'hermes-pro');
     expect(server.logins, 2);
     expect(store.cookies, {'hermes_session': 's2'});
   });

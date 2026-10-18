@@ -61,7 +61,7 @@ class FakeHermes implements HttpClientAdapter {
     'auth_required': true,
     'auth_providers': ['basic'],
     'auth_flows': ['cookie', 'native_pkce'],
-    'profiles': ['default', 'crawly', 'ligwina'],
+    'profiles': ['default', 'work', 'personal'],
   };
 
   @override
@@ -90,7 +90,7 @@ class FakeHermes implements HttpClientAdapter {
       case ('GET', '/api/model/info'):
         if (o.headers['cookie'] != 'hermes_session=$sessionValue') return _json(401, {'detail': 'Not authenticated'});
         final profile = o.uri.queryParameters['profile'] ?? 'default';
-        return _json(200, {'model': profile == 'default' ? 'bash-pro' : '$profile-model', 'provider': 'custom'});
+        return _json(200, {'model': profile == 'default' ? 'hermes-pro' : '$profile-model', 'provider': 'custom'});
       case ('POST', '/api/audio/transcribe'):
         if (o.headers['cookie'] != 'hermes_session=$sessionValue') return _json(401, {'detail': 'Not authenticated'});
         transcribeBodies.add(o.data as Map);

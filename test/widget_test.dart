@@ -137,11 +137,11 @@ void main() {
     await tester.enterText(_field('Password'), 'secret');
     await tester.tap(find.widgetWithText(InkWell, 'Sign in'));
     await tester.pumpAndSettle();
-    expect(find.text('Connected. Talking to default, model bash-pro'), findsOneWidget);
+    expect(find.text('Connected. Talking to default, model hermes-pro'), findsOneWidget);
 
-    await tester.tap(find.text('crawly'));
+    await tester.tap(find.text('work'));
     await tester.pumpAndSettle();
-    expect(find.text('Connected. Talking to crawly, model crawly-model'), findsOneWidget);
+    expect(find.text('Connected. Talking to work, model work-model'), findsOneWidget);
 
     await tester.tap(find.text('Start chatting'));
     await tester.pumpAndSettle();
@@ -151,7 +151,7 @@ void main() {
     expect(h.store.creds?.username, 'admin');
     expect(h.store.cookies, {'hermes_session': 's1'});
     expect(h.prefs.getString('settings.serverUrl'), _url);
-    expect(h.prefs.getString('settings.profile'), 'crawly');
+    expect(h.prefs.getString('settings.profile'), 'work');
     expect(h.prefs.getBool('settings.setupComplete'), isTrue);
   });
 

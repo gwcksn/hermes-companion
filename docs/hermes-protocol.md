@@ -12,7 +12,7 @@ Sources:
 `GET /api/status` returns:
 - `version` (0.21.6) and `gateway_running` / `gateway_state`.
 - `auth_required: true`, `auth_providers: ["basic"]`, `auth_flows: ["cookie", "native_pkce"]`.
-- `profiles: ["default", "crawly", "ligwina"]`. The profile list is public, so Setup 3 can show it before an authed call.
+- `profiles: ["default", "work", "personal"]`. The profile list is public, so Setup 3 can show it before an authed call.
 
 `GET /api/auth/providers` returns `{"providers":[{"name":"basic","display_name":"Username & Password","supports_password":true}]}`.
 

@@ -83,7 +83,7 @@ void main() {
     await first.start();
     first.gateway.stored['stored-1'] = [
       {'role': 'user', 'text': 'hi'},
-      {'role': 'assistant', 'text': 'Hello Gilang!'},
+      {'role': 'assistant', 'text': 'Hello Alex!'},
       {'role': 'tool', 'text': 'ignored'},
     ];
     final gateway = first.gateway;
@@ -96,16 +96,16 @@ void main() {
     expect(resume['session_id'], 'stored-1');
     expect(second.chat.messages.map((m) => (m.role, m.text)), [
       (ChatRole.user, 'hi'),
-      (ChatRole.hermes, 'Hello Gilang!'),
+      (ChatRole.hermes, 'Hello Alex!'),
     ]);
   });
 
   test('named profile is sent and gets its own stored session', () async {
-    final r = _Rig(prefs, profile: 'crawly');
+    final r = _Rig(prefs, profile: 'work');
     await r.start();
     addTearDown(r.c.dispose);
-    expect((r.gateway.last.request('session.create')['params'] as Map)['profile'], 'crawly');
-    expect(prefs.getString('chat.session.$_url|crawly'), 'stored-1');
+    expect((r.gateway.last.request('session.create')['params'] as Map)['profile'], 'work');
+    expect(prefs.getString('chat.session.$_url|work'), 'stored-1');
   });
 
   test('a full turn streams into one bubble and drives the avatar', () async {

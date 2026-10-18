@@ -74,7 +74,7 @@ Inspected `https://your-hermes.ts.net/` while signed in (Hermes 0.21.6). Everyth
 - The OpenAI-compatible API (port 8642) is NOT exposed at this address. `/v1/*` falls through to the dashboard page. Do not build against `/v1/chat/completions` unless the owner exposes it separately.
 
 **Profiles**
-- Profiles seen: `default` (Bash title, model `bash-pro`), `crawly`, `ligwina`. List with `GET /api/profiles`.
+- Profiles seen: `default`, `work`, `personal`. List with `GET /api/profiles`.
 - API calls are profile-scoped with a `?profile=<name>` query parameter.
 - Which profile this app targets: ASK THE OWNER. The design preselects `default`.
 
