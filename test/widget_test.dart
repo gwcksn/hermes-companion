@@ -19,6 +19,7 @@ import 'package:hermes_companion/data/location.dart';
 import 'package:hermes_companion/data/weather_provider.dart';
 import 'package:hermes_companion/layout/ambient.dart' show isNightWib;
 import 'package:hermes_companion/screens/clock_page.dart' show nowWib;
+import 'package:hermes_companion/pet/pet_clock.dart';
 import 'package:hermes_companion/pet/pet_controller.dart';
 import 'package:hermes_companion/pet/pet_state.dart';
 import 'package:hermes_companion/pet/pet_store.dart';
@@ -55,10 +56,19 @@ Future<void> _loadFonts() async {
   }
 }
 
+/// Wall-clock time that a test can push forward; `tester.pump` only advances fake timers.
+class _SkewedPetClock implements PetClock {
+  Duration skew = Duration.zero;
+
+  @override
+  DateTime now() => DateTime.now().add(skew);
+}
+
 class _Harness {
-  _Harness({this.initialPrefs = const {}});
+  _Harness({this.initialPrefs = const {}, this.petClock});
 
   final Map<String, Object> initialPrefs;
+  final PetClock? petClock;
   final store = MemoryCredentialStore();
   final server = FakeHermes();
   final gateway = FakeGateway();
@@ -86,6 +96,7 @@ class _Harness {
           notificationsBridgeProvider.overrideWithValue(notifications),
           recorderFactoryProvider.overrideWithValue(() => recorder),
           petStatsDebugProvider.overrideWithValue(false),
+          if (petClock != null) petClockProvider.overrideWithValue(petClock!),
         ],
         child: const HermesApp(),
       ),
@@ -412,8 +423,10 @@ void main() {
     Future<_Harness> homeHarness(
       WidgetTester tester, {
       Map<String, Object> extra = const {},
+      PetClock? petClock,
     }) async {
       final h = _Harness(
+        petClock: petClock,
         initialPrefs: {
           'settings.serverUrl': _url,
           'settings.profile': 'default',
@@ -565,13 +578,16 @@ void main() {
     testWidgets(
       'a due meal plays the pooping scene, then leaves a pile',
       (tester) async {
+        final clock = _SkewedPetClock();
         await homeHarness(
           tester,
           extra: petSeed(poopDueAt: DateTime.now().add(const Duration(seconds: 20))),
+          petClock: clock,
         );
         final c = containerOf(tester);
         expect(c.read(petProvider).poops, 0);
-        await tester.pump(const Duration(seconds: 65)); // the 1-minute pet tick finds it due
+        clock.skew = const Duration(seconds: 65);
+        await tester.pump(const Duration(seconds: 61)); // the 1-minute pet tick finds it due
         expect(c.read(avatarProvider), AvatarState.pooping);
         await tester.pump(const Duration(seconds: 4));
         expect(c.read(petProvider).poops, 1);
